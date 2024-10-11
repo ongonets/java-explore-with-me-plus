@@ -15,7 +15,7 @@ import java.net.URI;
 
 @Component
 @Slf4j
-public class StatClientImpl implements StatClient{
+public class StatClientImpl implements StatClient {
     private final WebClient webClient;
 
     public StatClientImpl(@Value("${client.url}") String uri) {
@@ -47,13 +47,13 @@ public class StatClientImpl implements StatClient{
         if (paramDto.getUnique()) {
             uriComponentsBuilder.queryParam("unique", true);
         }
+        URI uri = uriComponentsBuilder.build().toUri();
         return webClient.get()
-                .uri(uriComponentsBuilder.build().toUri())
+                .uri(uri)
                 .retrieve()
                 .bodyToMono(StatDto.class)
                 .doOnError(error -> log.error("An error has occurred {}", error.getMessage()))
                 .onErrorResume(error -> Mono.just(new StatDto()))
                 .block();
     }
-
 }
