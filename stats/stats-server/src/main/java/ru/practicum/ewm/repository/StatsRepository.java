@@ -10,7 +10,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface StatsRepository extends JpaRepository<Hit, Long> {
-    @Query("select new ru.practicum.ewm.model.Stat(h.app, h.uri, case when :unique = TRUE then count(distinct h.ip) else count(h.ip) end) " +
+    @Query("select new ru.practicum.ewm.model.Stat( " +
+            " h.app, h.uri, case when :unique = TRUE then count(distinct h.ip) else count(h.ip) end) " +
             " from Hit h" +
             " where h.time between :start and :end " +
             "   and (h.uri in :uris or :uris is null) " +
