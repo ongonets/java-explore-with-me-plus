@@ -6,6 +6,8 @@ import ru.practicum.ewm.dto.StatDto;
 
 
 public interface StatClient {
-    public void hit (HitDto hitDto);
-    public StatDto stat (ParamDto paramDto);
+
+    public void hit(HitDto hitDto);
+
+    public StatDto stat(ParamDto paramDto);
 }

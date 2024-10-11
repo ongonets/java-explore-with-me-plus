@@ -11,7 +11,7 @@ import java.util.List;
 @NoArgsConstructor
 public class ParamDto {
     private String start;
-    private String end ;
+    private String end;
     private List<String> uris;
-    private Boolean unique = false;
+    private boolean unique;
 }
