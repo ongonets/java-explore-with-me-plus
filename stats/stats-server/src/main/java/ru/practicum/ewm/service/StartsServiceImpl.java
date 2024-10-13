@@ -5,17 +5,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.dto.HitDto;
-import ru.practicum.ewm.dto.ParamDto;
 import ru.practicum.ewm.dto.StatDto;
 import ru.practicum.ewm.mapper.HitMapper;
 import ru.practicum.ewm.mapper.StatMapper;
 import ru.practicum.ewm.model.Hit;
-import ru.practicum.ewm.model.ParamStat;
-import ru.practicum.ewm.repository.StatsRepository;
 import ru.practicum.ewm.model.Stat;
+import ru.practicum.ewm.repository.StatsRepository;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -35,12 +35,13 @@ public class StartsServiceImpl implements StatsService {
     }
 
     @Override
-    public List<StatDto> getStats(ParamDto paramStatDto) {
-        log.info("StartsServiceImpl/getStats args: {}", paramStatDto);
-        ParamStat par = statMapper.map(paramStatDto);
-        List<Stat> result = repository.getStat(par.getStart(), par.getEnd(), par.getUris(), par.getUnique());
-        return result.stream()
+    public StatDto getStats(String start, String end, List<String> uris, boolean unique) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        LocalDateTime startTime = LocalDateTime.parse(start, formatter);
+        LocalDateTime endTime = LocalDateTime.parse(end, formatter);
+        Optional<Stat> result = repository.getStat(startTime, endTime, uris, unique);
+        return result
                 .map(statMapper::map)
-                .collect(Collectors.toList());
+                .orElseGet(StatDto::new);
     }
 }

@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.dto.HitDto;
-import ru.practicum.ewm.dto.ParamDto;
 import ru.practicum.ewm.dto.StatDto;
 import ru.practicum.ewm.service.StatsService;
 
@@ -23,7 +22,11 @@ public class StatsController {
     }
 
     @GetMapping("/stats")
-    public List<StatDto> getStats(ParamDto paramStatDto) {
-        return statsService.getStats(paramStatDto);
+    public StatDto getStats(@RequestParam String start,
+                                  @RequestParam String end,
+                                  @RequestParam(required = false) List<String> uris,
+                                  @RequestParam(defaultValue = "false") Boolean unique
+                                  ) {
+        return statsService.getStats(start,end,uris,unique);
     }
 }
