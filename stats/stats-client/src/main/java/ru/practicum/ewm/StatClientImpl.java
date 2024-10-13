@@ -44,12 +44,11 @@ public class StatClientImpl implements StatClient {
         if (paramDto.getUris() != null) {
             uriComponentsBuilder.queryParam("uris",paramDto.getUris());
         }
-        if (paramDto.getUnique()) {
+        if (paramDto.isUnique()) {
             uriComponentsBuilder.queryParam("unique", true);
         }
-        URI uri = uriComponentsBuilder.build().toUri();
         return webClient.get()
-                .uri(uri)
+                .uri(uriComponentsBuilder.build().toString())
                 .retrieve()
                 .bodyToMono(StatDto.class)
                 .doOnError(error -> log.error("An error has occurred {}", error.getMessage()))

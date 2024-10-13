@@ -4,6 +4,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -14,6 +15,6 @@ import java.time.LocalDateTime;
 public class ParamStat {
     LocalDateTime start;
     LocalDateTime end;
-    String[] uris;
+    List<String> uris;
     Boolean unique;
 }
