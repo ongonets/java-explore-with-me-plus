@@ -13,5 +13,5 @@ public class ParamDto {
     private String start;
     private String end ;
     private List<String> uris;
-    private Boolean unique;
+    private Boolean unique = false;
 }
