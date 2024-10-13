@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -35,13 +36,13 @@ public class StartsServiceImpl implements StatsService {
     }
 
     @Override
-    public StatDto getStats(String start, String end, List<String> uris, boolean unique) {
+    public List<StatDto> getStats(String start, String end, List<String> uris, boolean unique) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         LocalDateTime startTime = LocalDateTime.parse(start, formatter);
         LocalDateTime endTime = LocalDateTime.parse(end, formatter);
-        Optional<Stat> result = repository.getStat(startTime, endTime, uris, unique);
-        return result
+        List<Stat> result = repository.getStat(startTime, endTime, uris, unique);
+        return result.stream()
                 .map(statMapper::map)
-                .orElseGet(StatDto::new);
+                .collect(Collectors.toList());
     }
 }

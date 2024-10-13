@@ -5,12 +5,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
-import reactor.core.publisher.Mono;
 import ru.practicum.ewm.dto.HitDto;
 import ru.practicum.ewm.dto.ParamDto;
 import ru.practicum.ewm.dto.StatDto;
 
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 
 @Component
@@ -37,7 +39,7 @@ public class StatClientImpl implements StatClient {
     }
 
     @Override
-    public StatDto stat(ParamDto paramDto) {
+    public List<StatDto> stat(ParamDto paramDto) {
         UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUri(URI.create("/stats"))
                 .queryParam("start", paramDto.getStart())
                 .queryParam("end", paramDto.getEnd());
@@ -47,12 +49,17 @@ public class StatClientImpl implements StatClient {
         if (paramDto.isUnique()) {
             uriComponentsBuilder.queryParam("unique", true);
         }
-        return webClient.get()
+        StatDto[] result = webClient.get()
                 .uri(uriComponentsBuilder.build().toString())
                 .retrieve()
-                .bodyToMono(StatDto.class)
+                .bodyToMono(StatDto[].class)
                 .doOnError(error -> log.error("An error has occurred {}", error.getMessage()))
-                .onErrorResume(error -> Mono.just(new StatDto()))
+                .onErrorComplete()
                 .block();
+        if (result != null) {
+            return Arrays.stream(result).toList();
+        } else {
+            return  new ArrayList<>();
+        }
     }
 }

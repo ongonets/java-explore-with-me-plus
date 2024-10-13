@@ -8,7 +8,6 @@ import ru.practicum.ewm.model.Stat;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 public interface StatsRepository extends JpaRepository<Hit, Long> {
     @Query("select new ru.practicum.ewm.model.Stat( " +
@@ -18,10 +17,10 @@ public interface StatsRepository extends JpaRepository<Hit, Long> {
             "   and (h.uri in :uris or :uris is null) " +
             " group by h.app, h.uri " +
             " order by case when :unique = TRUE then count(distinct h.ip) else count(h.ip) end desc")
-    Optional<Stat> getStat(
+    List<Stat> getStat(
             @Param("start") LocalDateTime start,
             @Param("end") LocalDateTime end,
             @Param("uris") List<String> uris,
-            @Param("unique") Boolean unique
+            @Param("unique") boolean unique
     );
 }

@@ -22,7 +22,7 @@ public class StatsController {
     }
 
     @GetMapping("/stats")
-    public StatDto getStats(@RequestParam String start,
+    public List<StatDto> getStats(@RequestParam String start,
                                   @RequestParam String end,
                                   @RequestParam(required = false) List<String> uris,
                                   @RequestParam(defaultValue = "false") Boolean unique
