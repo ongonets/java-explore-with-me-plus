@@ -14,9 +14,6 @@ public class Compilation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
-
     String title;
-    
     Boolean pinned;
-
 }
