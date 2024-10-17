@@ -48,12 +48,14 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public EventFullDto findBy(ParamEventDto paramEventDto) {
-        return null;
+        Event event = getEvent(paramEventDto);
+        return eventMapper.mapToFullDto(event, null);
     }
 
     @Override
     public EventFullDto update(ParamEventDto paramEventDto, UpdateEventUserRequest updateEvent) {
-        return null;
+        Event event = getEvent(paramEventDto);
+        return eventMapper.mapToFullDto(event, null);
     }
 
     @Override
@@ -70,7 +72,7 @@ public class EventServiceImpl implements EventService {
         return categoryRepository.findById(categoryId)
                 .orElseThrow(() -> {
                     log.error("Not found category with ID = {}", categoryId);
-                    return new NotFoundException(String.format("Not found user category ID = %d", categoryId));
+                    return new NotFoundException(String.format("Not found category ID = %d", categoryId));
                 });
     }
 
@@ -80,5 +82,22 @@ public class EventServiceImpl implements EventService {
                     log.error("Not found user with ID = {}", userId);
                     return new NotFoundException(String.format("Not found user with ID = %d", userId));
                 });
+    }
+
+    private Event getEvent(ParamEventDto paramEventDto) {
+        long userId = paramEventDto.getUserId();
+        long eventId = paramEventDto.getEventId();
+        User user = getUser(userId);
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> {
+                    log.error("Not found event with ID = {}", eventId);
+                    return new NotFoundException(String.format("Not found event with ID = %d", eventId));
+                });
+        if (event.getInitiator() != user) {
+            log.error("Not found event with ID = {}", eventId);
+            throw new NotFoundException(
+                    String.format("Not found event with ID = %d", eventId));
+        }
+        return event;
     }
 }
