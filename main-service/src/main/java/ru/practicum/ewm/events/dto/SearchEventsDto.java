@@ -6,14 +6,11 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
-import java.util.List;
-
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @AllArgsConstructor
 @NoArgsConstructor
-public class EventRequestStatusUpdateResult {
-    List<ParticipationRequestDto> confirmedRequest;
-    List<ParticipationRequestDto> rejectedRequest;
-
+public class SearchEventsDto {
+    Long from;
+    Long size;
 }
