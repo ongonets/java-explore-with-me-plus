@@ -1,16 +1,16 @@
-package ru.practicum.ewm.events.mapper;
+package ru.practicum.ewm.event.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.ReportingPolicy;
-import ru.practicum.ewm.events.dto.NewEventDto;
-import ru.practicum.ewm.events.model.Event;
+import ru.practicum.ewm.event.dto.NewEventDto;
+import ru.practicum.ewm.event.model.Event;
 
 @Mapper(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
         unmappedTargetPolicy = ReportingPolicy.IGNORE,
         componentModel = "spring")
-public interface EventsMapper {
+public interface EventMapper {
 
 
     @Mapping(target = "id", ignore = true)
