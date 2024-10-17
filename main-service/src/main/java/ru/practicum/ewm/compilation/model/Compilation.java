@@ -1,22 +1,22 @@
-package ru.practicum.ewm.category;
+package ru.practicum.ewm.compilation.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 
 @Data
 @Entity
-@Table(name = "category")
+@Table(name = "compilations")
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Category {
+public class Compilation {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    @Column(name = "name", length = 50, nullable = false)
-    @Size(min = 1)
-    String name;
+    String title;
+    
+    Boolean pinned;
+
 }

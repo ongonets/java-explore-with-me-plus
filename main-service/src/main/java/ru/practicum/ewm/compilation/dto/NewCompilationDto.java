@@ -1,4 +1,4 @@
-package ru.practicum.ewm.category;
+package ru.practicum.ewm.compilation.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.AccessLevel;
@@ -7,11 +7,19 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
+import java.util.List;
+
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @AllArgsConstructor
 @NoArgsConstructor
-public class NewCategoryDto {
+public class NewCompilationDto {
+
+    List<Long> events;
+
+    Boolean pinned;
+
     @NotBlank
-    String name;
+    String title;
+
 }

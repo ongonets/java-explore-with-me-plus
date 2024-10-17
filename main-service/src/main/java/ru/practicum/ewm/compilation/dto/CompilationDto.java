@@ -1,6 +1,6 @@
-package ru.practicum.ewm.category;
+package ru.practicum.ewm.compilation.dto;
 
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -11,12 +11,14 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @AllArgsConstructor
 @NoArgsConstructor
-public class CategoryDto {
+public class CompilationDto {
 
+    @NotNull
     Long id;
 
-    @NotBlank
+    Boolean pinned;
 
-    String name;
+    @NotNull
+    String title;
 
 }

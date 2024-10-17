@@ -1,26 +1,26 @@
-package ru.practicum.ewm.user;
+package ru.practicum.ewm.user.model;
 
+import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 @Data
+@Entity
+@Table(name = "users")
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@AllArgsConstructor
-@NoArgsConstructor
-public class UserDto {
+public class User {
 
-    @NotBlank
     @Email
+    @Column(name = "email")
     String email;
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    @NotBlank
+    @Column(name = "name")
     String name;
 
 }
