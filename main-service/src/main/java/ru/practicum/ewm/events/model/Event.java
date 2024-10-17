@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import ru.practicum.ewm.category.Category;
+import ru.practicum.ewm.user.User;
 
 import java.time.LocalDateTime;
 
@@ -24,6 +25,10 @@ public class Event {
     @ManyToOne
     @JoinColumn(name = "category_id")
     Category category;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    User initiator;
 
     long confirmedRequests;
 
