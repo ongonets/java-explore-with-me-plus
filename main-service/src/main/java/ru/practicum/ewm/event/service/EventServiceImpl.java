@@ -8,10 +8,13 @@ import ru.practicum.ewm.category.repository.CategoryRepository;
 import ru.practicum.ewm.errorHandler.exception.NotFoundException;
 import ru.practicum.ewm.event.dto.*;
 import ru.practicum.ewm.event.mapper.EventMapper;
+import ru.practicum.ewm.event.model.Event;
+import ru.practicum.ewm.event.model.EventState;
 import ru.practicum.ewm.event.repository.EventRepository;
 import ru.practicum.ewm.user.User;
 import ru.practicum.ewm.user.repository.UserRepository;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 
 @Service
@@ -33,11 +36,13 @@ public class EventServiceImpl implements EventService {
     public EventFullDto create(long userId, NewEventDto newEvent) {
         User user = getUser(userId);
         Category category = getCategory(newEvent.getCategory());
-
-
-
-
-        return null;
+        Event event = eventMapper.map(newEvent);
+        event.setCategory(category);
+        event.setInitiator(user);
+        event.setCreatedOn(LocalDateTime.now());
+        event.setState(EventState.PENDING);
+        eventRepository.save(event);
+        return eventMapper.mapToFullDto(event, null);
     }
 
     @Override
