@@ -5,9 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import ru.practicum.ewm.category.CategoryDto;
+import ru.practicum.ewm.category.dto.CategoryDto;
 import ru.practicum.ewm.event.model.EventState;
-import ru.practicum.ewm.user.UserShortDto;
+import ru.practicum.ewm.user.dto.UserShortDto;
 
 import java.time.LocalDateTime;
 
