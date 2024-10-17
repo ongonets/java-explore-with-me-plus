@@ -7,7 +7,6 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import ru.practicum.ewm.category.CategoryDto;
 import ru.practicum.ewm.events.model.EventState;
-import ru.practicum.ewm.events.model.Location;
 import ru.practicum.ewm.user.UserShortDto;
 
 import java.time.LocalDateTime;
