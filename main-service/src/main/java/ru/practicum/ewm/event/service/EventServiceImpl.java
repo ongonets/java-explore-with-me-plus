@@ -42,7 +42,10 @@ public class EventServiceImpl implements EventService {
         event.setCreatedOn(LocalDateTime.now());
         event.setState(EventState.PENDING);
         eventRepository.save(event);
+<<<<<<< HEAD
         log.info("Event save {}", event);
+=======
+>>>>>>> origin/main_svc_events
         return eventMapper.mapToFullDto(event, null);
     }
 
