@@ -4,11 +4,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.ewm.user.dto.FindUsersParams;
 import ru.practicum.ewm.user.dto.NewUserRequest;
 import ru.practicum.ewm.user.dto.UserDto;
 import ru.practicum.ewm.user.mapper.UserMapper;
 import ru.practicum.ewm.user.model.User;
 import ru.practicum.ewm.user.repository.UserRepository;
+
+import java.util.List;
 
 @Slf4j
 @Service
@@ -24,5 +27,18 @@ public class UserServiceImpl implements UserService {
         user = userRepository.save(user);
         log.info("User is saved: {}", user);
         return userMapper.mapToUserDto(user);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<UserDto> findUsers(FindUsersParams params) {
+        List<User> users;
+        if (params.getIds() == null || params.getIds().isEmpty()) {
+            users = userRepository.findAllOrderById(params.getFrom(), params.getSize());
+        } else {
+            users = userRepository.findAllByIds(params.getIds());
+        }
+        log.info("Search for users completed");
+        return userMapper.mapToUsersDto(users);
     }
 }
