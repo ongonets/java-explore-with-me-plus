@@ -1,9 +1,11 @@
 package ru.practicum.ewm.user;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.user.dto.FindUsersParams;
 import ru.practicum.ewm.user.dto.NewUserRequest;
@@ -13,9 +15,10 @@ import ru.practicum.ewm.user.service.UserService;
 import java.util.List;
 
 @Slf4j
+@Validated
 @RestController
-@RequestMapping(path = "admin/users")
 @RequiredArgsConstructor
+@RequestMapping(path = "admin/users")
 public class UserController {
     private final UserService userService;
 
@@ -33,5 +36,12 @@ public class UserController {
         FindUsersParams params = new FindUsersParams(ids, from, size);
         log.info("Received request to find users with params: {}", params);
         return userService.findUsers(params);
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteUser(@PathVariable @Positive long id) {
+        log.info("Received request to delete user with id: {}", id);
+        userService.deleteUser(id);
     }
 }

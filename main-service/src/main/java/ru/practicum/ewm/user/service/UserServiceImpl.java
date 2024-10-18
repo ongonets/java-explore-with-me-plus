@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.ewm.errorHandler.exception.NotFoundException;
 import ru.practicum.ewm.user.dto.FindUsersParams;
 import ru.practicum.ewm.user.dto.NewUserRequest;
 import ru.practicum.ewm.user.dto.UserDto;
@@ -40,5 +41,14 @@ public class UserServiceImpl implements UserService {
         }
         log.info("Search for users completed");
         return userMapper.mapToUsersDto(users);
+    }
+
+    @Override
+    public void deleteUser(long id) {
+        User userToDelete = userRepository.findById(id).orElseThrow(() -> {
+                    log.error("Not found user with ID = {}", id);
+                    return new NotFoundException("Not found user with ID = " + id);
+                });
+        userRepository.delete(userToDelete);
     }
 }

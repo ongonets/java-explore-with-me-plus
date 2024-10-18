@@ -11,4 +11,6 @@ public interface UserService {
     UserDto createUser(NewUserRequest request);
 
     List<UserDto> findUsers(FindUsersParams params);
+
+    void deleteUser(long id);
 }
