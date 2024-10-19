@@ -20,35 +20,37 @@ public class ErrorHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ApiError handleNotFoundException(NotFoundException e, HttpStatus status) {
-        return new ApiError(getStackTrace(e), e.getMessage(), "The required object was not found.", status);
+    public ApiError handleNotFoundException(NotFoundException e) {
+        return new ApiError(getStackTrace(e), e.getMessage(),
+                "The required object was not found.", HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiError handleValidationException(ValidationException e, HttpStatus status) {
-        return new ApiError(getStackTrace(e), e.getMessage(), "Incorrectly made request.", status);
+    public ApiError handleValidationException(ValidationException e) {
+        return new ApiError(getStackTrace(e), e.getMessage(),
+                "Incorrectly made request.", HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.FORBIDDEN)
-    public ApiError handleConditionsNotMetException(ConditionsNotMetException e, HttpStatus status) {
+    public ApiError handleConditionsNotMetException(ConditionsNotMetException e) {
         return new ApiError(getStackTrace(e), e.getMessage(),
-                "For the requested operation the conditions are not met.", status);
+                "For the requested operation the conditions are not met.", HttpStatus.FORBIDDEN);
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.CONFLICT)
-    public ApiError handleConflictDataException(ConflictDataException e, HttpStatus status) {
+    public ApiError handleConflictDataException(ConflictDataException e) {
         return new ApiError(getStackTrace(e), e.getMessage(),
-                "Integrity constraint has been violated.", status);
+                "Integrity constraint has been violated.", HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ApiError handleThrowable(Throwable e, HttpStatus status) {
+    public ApiError handleThrowable(Throwable e) {
         return new ApiError(getStackTrace(e), e.getMessage(),
-                "Error", status);
+                "Error", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     private String getStackTrace(Throwable e) {
