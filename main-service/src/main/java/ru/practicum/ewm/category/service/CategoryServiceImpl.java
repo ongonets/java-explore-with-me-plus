@@ -12,6 +12,8 @@ import ru.practicum.ewm.category.repository.CategoryRepository;
 import ru.practicum.ewm.errorHandler.exception.ConflictDataException;
 import ru.practicum.ewm.errorHandler.exception.NotFoundException;
 
+import java.util.List;
+
 
 @Slf4j
 @Service
@@ -53,6 +55,14 @@ public class CategoryServiceImpl implements CategoryService {
         Category category = findCategory(id);
         log.info("Category with ID = {} is found: {}", id, category.getName());
         return categoryMapper.map(category);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CategoryDto> findCategories(int from, int size) {
+        List<Category> categories = categoryRepository.findAllOrderById(from, size);
+        log.info("Search for categories with params: from = {}, size = {} completed", from, size);
+        return categoryMapper.mapToCategoryDto(categories);
     }
 
     private Category findCategory(long id) {

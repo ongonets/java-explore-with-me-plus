@@ -2,6 +2,7 @@ package ru.practicum.ewm.category;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -10,6 +11,8 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.category.dto.CategoryDto;
 import ru.practicum.ewm.category.dto.NewCategoryDto;
 import ru.practicum.ewm.category.service.CategoryService;
+
+import java.util.List;
 
 @Slf4j
 @Validated
@@ -43,5 +46,12 @@ public class CategoryController {
     public CategoryDto findCategoryById(@Positive @PathVariable long catId) {
         log.info("Received request to find category with ID = {}", catId);
         return categoryService.findCategoryById(catId);
+    }
+
+    @GetMapping(path = "categories")
+    public List<CategoryDto> findCategories(@PositiveOrZero @RequestParam(defaultValue = "0") int from,
+                                            @Positive @RequestParam(defaultValue = "10") int size) {
+        log.info("Received request to find categories");
+        return categoryService.findCategories(from, size);
     }
 }
