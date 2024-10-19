@@ -9,5 +9,7 @@ public interface CategoryService {
 
     void deleteCategory(long id);
 
+    CategoryDto updateCategory(NewCategoryDto request, long id);
+
     CategoryDto findCategoryById(long id);
 }

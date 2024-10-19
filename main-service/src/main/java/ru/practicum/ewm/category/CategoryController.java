@@ -32,6 +32,13 @@ public class CategoryController {
         categoryService.deleteCategory(catId);
     }
 
+    @PatchMapping(path = "admin/categories/{catId}")
+    public CategoryDto updateCategory(@Valid @RequestBody NewCategoryDto request,
+                                      @Positive @PathVariable long catId) {
+        log.info("Received request to update category with ID = {}", catId);
+        return categoryService.updateCategory(request, catId);
+    }
+
     @GetMapping(path = "categories/{catId}")
     public CategoryDto findCategoryById(@Positive @PathVariable long catId) {
         log.info("Received request to find category with ID = {}", catId);
