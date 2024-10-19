@@ -24,6 +24,7 @@ public interface EventMapper {
     Event map(NewEventDto newEvent);
 
     @Mapping(source = "statDto.hits", target = "views")
+    @Mapping(expression = "java(map(event))", target = "location")
     EventFullDto mapToFullDto(Event event, StatDto statDto);
 
     @Mapping(source = "statDto.hits", target = "views")

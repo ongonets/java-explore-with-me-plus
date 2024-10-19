@@ -3,29 +3,38 @@ package ru.practicum.ewm.event.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.category.model.Category;
 import ru.practicum.ewm.category.repository.CategoryRepository;
 import ru.practicum.ewm.errorHandler.exception.NotFoundException;
 import ru.practicum.ewm.event.dto.*;
 import ru.practicum.ewm.event.mapper.EventMapper;
+import ru.practicum.ewm.event.mapper.RequestMapper;
 import ru.practicum.ewm.event.model.Event;
 import ru.practicum.ewm.event.model.EventState;
+import ru.practicum.ewm.event.model.Request;
+import ru.practicum.ewm.event.model.RequestStatus;
 import ru.practicum.ewm.event.repository.EventRepository;
+import ru.practicum.ewm.event.repository.RequestRepository;
 import ru.practicum.ewm.user.model.User;
 import ru.practicum.ewm.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional(readOnly = true)
 public class EventServiceImpl implements EventService {
 
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
+    private final RequestRepository requestRepository;
     private final EventMapper eventMapper;
+    private final RequestMapper requestMapper;
 
     @Override
     public Collection<EventShortDto> findBy(long userId, SearchEventDto searchEventDto) {
@@ -33,6 +42,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional
     public EventFullDto create(long userId, NewEventDto newEvent) {
         User user = getUser(userId);
         Category category = getCategory(newEvent.getCategory());
@@ -53,19 +63,31 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional
     public EventFullDto update(ParamEventDto paramEventDto, UpdateEventUserRequest updateEvent) {
         Event event = getEvent(paramEventDto);
         return eventMapper.mapToFullDto(event, null);
     }
 
     @Override
-    public ParticipationRequestDto findRequest(ParamEventDto paramEventDto) {
-        return null;
+    public List<ParticipationRequestDto> findRequest(ParamEventDto paramEventDto) {
+        Event event = getEvent(paramEventDto);
+        List<Request> requests = requestRepository.findAllByEvent(event);
+        return requestMapper.mapToDto(requests);
     }
 
     @Override
-    public EventRequestStatusUpdateResult updateRequest(ParamEventDto paramEventDto) {
-        return null;
+    @Transactional
+    public EventRequestStatusUpdateResult updateRequest(ParamEventDto paramEventDto,
+                                                        EventRequestStatusUpdateRequest updateRequest) {
+        Event event = getEvent(paramEventDto);
+        requestRepository.updateStatus(updateRequest.getStatus(), updateRequest.getRequestIds());
+        List<Request> requests = requestRepository.findAllByEvent(event);
+        List<Request> confirmedRequests = requests.stream()
+                .filter(request -> request.getStatus().equals(RequestStatus.CONFIRMED)).toList();
+        List<Request> rejectedRequests = requests.stream()
+                .filter(request -> request.getStatus().equals(RequestStatus.REJECTED)).toList();
+        return requestMapper.mapToRequestStatus(confirmedRequests, rejectedRequests);
     }
 
     private Category getCategory(long categoryId) {

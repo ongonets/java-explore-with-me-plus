@@ -9,6 +9,7 @@ import ru.practicum.ewm.event.dto.*;
 import ru.practicum.ewm.event.service.EventService;
 
 import java.util.Collection;
+import java.util.List;
 
 @RestController
 @RequestMapping(path = "/users")
@@ -51,7 +52,7 @@ public class PrivateEventController {
     }
 
     @GetMapping("/users/{userId}/events/{eventId}/requests")
-    public ParticipationRequestDto findEventRequest(@PathVariable long userId, @PathVariable long eventId) {
+    public List<ParticipationRequestDto> findEventRequest(@PathVariable long userId, @PathVariable long eventId) {
         ParamEventDto paramEventDto = new ParamEventDto(userId, eventId);
         log.info("Request to find eventRequests {}", paramEventDto);
         return eventService.findRequest(paramEventDto);
@@ -63,6 +64,6 @@ public class PrivateEventController {
                                                       @RequestBody EventRequestStatusUpdateRequest updateEvent) {
         ParamEventDto paramEventDto = new ParamEventDto(userId, eventId);
         log.info("Request to update eventRequests {}", paramEventDto);
-        return eventService.updateRequest(paramEventDto);
+        return eventService.updateRequest(paramEventDto, updateEvent);
     }
 }
