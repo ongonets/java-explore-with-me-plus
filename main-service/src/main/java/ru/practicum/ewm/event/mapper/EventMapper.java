@@ -2,13 +2,12 @@ package ru.practicum.ewm.event.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import ru.practicum.ewm.category.mapper.CategoryMapper;
+import ru.practicum.ewm.category.model.Category;
 import ru.practicum.ewm.dto.StatDto;
-import ru.practicum.ewm.event.dto.EventFullDto;
-import ru.practicum.ewm.event.dto.EventShortDto;
-import ru.practicum.ewm.event.dto.Location;
-import ru.practicum.ewm.event.dto.NewEventDto;
+import ru.practicum.ewm.event.dto.*;
 import ru.practicum.ewm.event.model.Event;
 import ru.practicum.ewm.user.mapper.UserMapper;
 
@@ -35,4 +34,7 @@ public interface EventMapper {
     @Mapping(source = "latitude", target = "lat")
     @Mapping(source = "longitude", target = "lon")
     Location map(Event event);
+
+    @Mapping(source = "category", target = "category")
+    Event update(@MappingTarget Event event, UpdateEventUserRequest updateEvent, Category category);
 }

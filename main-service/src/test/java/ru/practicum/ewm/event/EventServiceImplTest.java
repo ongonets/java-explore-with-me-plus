@@ -53,6 +53,19 @@ public class EventServiceImplTest {
             "title"
     );
 
+    private final UpdateEventUserRequest updateEvent = new UpdateEventUserRequest(
+            "newAnnotation",
+            1,
+            "newDescription",
+            LocalDateTime.now().plusDays(3),
+            new Location(34.56, 25.98),
+            10,
+            true,
+            EventState.PENDING,
+            false,
+            "title"
+    );
+
     private User getUser() {
         User user = new User("test@mail.ru", null, "name");
         em.persist(user);
@@ -142,6 +155,29 @@ public class EventServiceImplTest {
                 hasProperty("id", notNullValue()),
                 hasProperty("title", equalTo(sourceEvent.getTitle())),
                 hasProperty("annotation", equalTo(sourceEvent.getAnnotation()))
+        )));
+    }
+
+
+    @Test
+    void updateEvent() {
+        // given
+        Event sourceEvent = getEvent();
+        ParamEventDto paramEventDto = new ParamEventDto(sourceEvent.getInitiator().getId(), sourceEvent.getId());
+
+
+        // when
+        eventService.update(paramEventDto, updateEvent);
+
+        // then
+        TypedQuery<Event> query = em.createQuery("Select e from Event e where e.id = :id", Event.class);
+        Event targetEvent = query.setParameter("id", sourceEvent.getId()).getSingleResult();
+
+        assertThat(targetEvent, is(allOf(
+                hasProperty("id", notNullValue()),
+                hasProperty("title", equalTo(newEvent.getTitle())),
+                hasProperty("annotation", equalTo(updateEvent.getAnnotation())),
+                hasProperty("description", equalTo(updateEvent.getDescription()))
         )));
     }
 

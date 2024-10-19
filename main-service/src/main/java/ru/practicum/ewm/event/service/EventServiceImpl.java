@@ -74,8 +74,11 @@ public class EventServiceImpl implements EventService {
     @Transactional
     public EventFullDto update(ParamEventDto paramEventDto, UpdateEventUserRequest updateEvent) {
         Event event = getEvent(paramEventDto);
+        Category category = getCategory(updateEvent.getCategory());
+        Event updatedEvent = eventMapper.update(event, updateEvent, category);
+        eventRepository.save(updatedEvent);
         Map<Long, Long> countConfirmedRequest = getCountConfirmedRequest(List.of(event));
-        return eventMapper.mapToFullDto(event, null, countConfirmedRequest.get(event.getId()));
+        return eventMapper.mapToFullDto(updatedEvent, null, countConfirmedRequest.get(event.getId()));
     }
 
     @Override
