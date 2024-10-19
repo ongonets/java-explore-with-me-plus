@@ -25,10 +25,12 @@ public interface EventMapper {
 
     @Mapping(source = "statDto.hits", target = "views")
     @Mapping(expression = "java(map(event))", target = "location")
-    EventFullDto mapToFullDto(Event event, StatDto statDto);
+    @Mapping(source = "countConfirmedRequest", target = "confirmedRequests")
+    EventFullDto mapToFullDto(Event event, StatDto statDto, Long countConfirmedRequest);
 
-    @Mapping(source = "statDto.hits", target = "views")
-    EventShortDto mapToShortDto(Event event, StatDto statDto);
+    @Mapping(source = "hits", target = "views")
+    @Mapping(source = "count", target = "confirmedRequests")
+    EventShortDto mapToShortDto(Event event, Long hits, Long count);
 
     @Mapping(source = "latitude", target = "lat")
     @Mapping(source = "longitude", target = "lon")

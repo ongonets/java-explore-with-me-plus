@@ -22,6 +22,8 @@ import ru.practicum.ewm.user.repository.UserRepository;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -38,7 +40,12 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public Collection<EventShortDto> findBy(long userId, SearchEventDto searchEventDto) {
-        return null;
+        User user = getUser(userId);
+        List<Event> events = eventRepository.findByInitiator(user, searchEventDto.getSize(), searchEventDto.getFrom());
+        Map<Long, Long> countConfirmedRequest = getCountConfirmedRequest(events);
+        return events.stream()
+                .map(event ->  eventMapper.mapToShortDto(event, null, countConfirmedRequest.get(event.getId())))
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -53,20 +60,22 @@ public class EventServiceImpl implements EventService {
         event.setState(EventState.PENDING);
         eventRepository.save(event);
         log.info("Event save {}", event);
-        return eventMapper.mapToFullDto(event, null);
+        return eventMapper.mapToFullDto(event, null, null);
     }
 
     @Override
     public EventFullDto findBy(ParamEventDto paramEventDto) {
         Event event = getEvent(paramEventDto);
-        return eventMapper.mapToFullDto(event, null);
+        Map<Long, Long> countConfirmedRequest = getCountConfirmedRequest(List.of(event));
+        return eventMapper.mapToFullDto(event, null, countConfirmedRequest.get(event.getId()));
     }
 
     @Override
     @Transactional
     public EventFullDto update(ParamEventDto paramEventDto, UpdateEventUserRequest updateEvent) {
         Event event = getEvent(paramEventDto);
-        return eventMapper.mapToFullDto(event, null);
+        Map<Long, Long> countConfirmedRequest = getCountConfirmedRequest(List.of(event));
+        return eventMapper.mapToFullDto(event, null, countConfirmedRequest.get(event.getId()));
     }
 
     @Override
@@ -121,5 +130,10 @@ public class EventServiceImpl implements EventService {
                     String.format("Not found event with ID = %d", eventId));
         }
         return event;
+    }
+
+    private Map<Long, Long> getCountConfirmedRequest(List<Event> events) {
+        return requestRepository.findConfirmedRequest(events)
+                .collect(Collectors.toMap(RequestCountDto::getEventId, RequestCountDto::getCount));
     }
 }

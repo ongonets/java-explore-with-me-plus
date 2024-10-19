@@ -21,8 +21,8 @@ public class PrivateEventController {
 
     @GetMapping("/{userId}/events")
     public Collection<EventShortDto> findAllEvents(@PathVariable long userId,
-                                                   @RequestParam long from,
-                                                   @RequestParam long size) {
+                                                   @RequestParam(defaultValue = "0") long from,
+                                                   @RequestParam(defaultValue = "10") long size) {
         log.info("Request to find user events {}", userId);
         SearchEventDto paramEventsDto = new SearchEventDto(from, size);
         return eventService.findBy(userId, paramEventsDto);
