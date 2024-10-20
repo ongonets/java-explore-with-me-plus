@@ -1,12 +1,10 @@
-package ru.practicum.ewm.event.model;
+package ru.practicum.ewm.request.model;
 
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
+import ru.practicum.ewm.event.model.Event;
 import ru.practicum.ewm.user.model.User;
 
 import java.time.LocalDateTime;
@@ -17,6 +15,7 @@ import java.time.LocalDateTime;
 @Setter
 @ToString
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@AllArgsConstructor
 public class Request {
 
     @Id

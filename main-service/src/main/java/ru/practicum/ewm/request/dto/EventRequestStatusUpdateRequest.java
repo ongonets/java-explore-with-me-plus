@@ -1,11 +1,11 @@
-package ru.practicum.ewm.event.dto;
+package ru.practicum.ewm.request.dto;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import ru.practicum.ewm.event.model.RequestStatus;
+import ru.practicum.ewm.request.model.RequestStatus;
 
 import java.util.List;
 

@@ -13,13 +13,14 @@ import ru.practicum.ewm.dto.StatDto;
 import ru.practicum.ewm.errorHandler.exception.NotFoundException;
 import ru.practicum.ewm.event.dto.*;
 import ru.practicum.ewm.event.mapper.EventMapper;
-import ru.practicum.ewm.event.mapper.RequestMapper;
 import ru.practicum.ewm.event.model.Event;
 import ru.practicum.ewm.event.model.EventState;
-import ru.practicum.ewm.event.model.Request;
-import ru.practicum.ewm.event.model.RequestStatus;
 import ru.practicum.ewm.event.repository.EventRepository;
-import ru.practicum.ewm.event.repository.RequestRepository;
+import ru.practicum.ewm.request.dto.*;
+import ru.practicum.ewm.request.mapper.RequestMapper;
+import ru.practicum.ewm.request.model.Request;
+import ru.practicum.ewm.request.model.RequestStatus;
+import ru.practicum.ewm.request.repository.RequestRepository;
 import ru.practicum.ewm.user.model.User;
 import ru.practicum.ewm.user.repository.UserRepository;
 

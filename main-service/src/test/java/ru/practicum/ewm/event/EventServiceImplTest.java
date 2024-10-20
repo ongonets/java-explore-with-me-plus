@@ -13,13 +13,14 @@ import ru.practicum.ewm.category.model.Category;
 import ru.practicum.ewm.event.dto.*;
 import ru.practicum.ewm.event.mapper.EventMapper;
 import ru.practicum.ewm.event.mapper.EventMapperImpl;
-import ru.practicum.ewm.event.mapper.RequestMapperImpl;
+import ru.practicum.ewm.request.mapper.RequestMapperImpl;
 import ru.practicum.ewm.event.model.Event;
 import ru.practicum.ewm.event.model.EventState;
-import ru.practicum.ewm.event.model.Request;
-import ru.practicum.ewm.event.model.RequestStatus;
+import ru.practicum.ewm.request.model.Request;
+import ru.practicum.ewm.request.model.RequestStatus;
 import ru.practicum.ewm.event.service.EventService;
 import ru.practicum.ewm.event.service.EventServiceImpl;
+import ru.practicum.ewm.request.dto.UpdateEventUserRequest;
 import ru.practicum.ewm.user.mapper.UserMapperImpl;
 import ru.practicum.ewm.user.model.User;
 
@@ -149,7 +150,8 @@ public class EventServiceImplTest {
 
         // when
          Collection<EventShortDto> targetEvents = eventService
-                 .findBy(new PrivateSearchEventDto(sourceEvent.getId(), 0L,10L, "127.0.0.1"));
+                 .findBy(new PrivateSearchEventDto(
+                         sourceEvent.getInitiator().getId(), 0L,10L, "127.0.0.1"));
 
         // then
 
@@ -166,6 +168,7 @@ public class EventServiceImplTest {
         // given
         Event sourceEvent = getEvent();
         ParamEventDto paramEventDto = new ParamEventDto(sourceEvent.getInitiator().getId(), sourceEvent.getId());
+        updateEvent.setCategory(sourceEvent.getCategory().getId());
 
 
         // when
