@@ -17,7 +17,6 @@ import ru.practicum.ewm.request.repository.RequestRepository;
 import ru.practicum.ewm.user.model.User;
 import ru.practicum.ewm.user.repository.UserRepository;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -43,7 +42,7 @@ public class RequestServiceImpl implements RequestService {
         User user = getUser(userId);
         Event event = getEvent(eventId);
         validateRequest(user, event);
-        Request request = new Request(0, event, user, RequestStatus.PENDING, LocalDateTime.now());
+        Request request = new Request(event, user);
         requestRepository.save(request);
         return requestMapper.mapToDto(request);
     }

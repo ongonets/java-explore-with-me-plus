@@ -44,8 +44,9 @@ public class PrivateEventController {
     @GetMapping("/{userId}/events/{eventId}")
     public EventFullDto findEvent(@PathVariable long userId, @PathVariable long eventId, HttpServletRequest request) {
         ParamEventDto paramEventDto = new ParamEventDto(userId, eventId);
+        String remoteAddr = request.getRemoteAddr();
         log.info("Request to find event {}", paramEventDto);
-        return eventService.findBy(paramEventDto, request.getRemoteAddr());
+        return eventService.findBy(paramEventDto,remoteAddr);
     }
 
     @PatchMapping("/{userId}/events/{eventId}")
@@ -57,14 +58,14 @@ public class PrivateEventController {
         return eventService.update(paramEventDto, updateEvent);
     }
 
-    @GetMapping("/users/{userId}/events/{eventId}/requests")
+    @GetMapping("/{userId}/events/{eventId}/requests")
     public List<ParticipationRequestDto> findEventRequest(@PathVariable long userId, @PathVariable long eventId) {
         ParamEventDto paramEventDto = new ParamEventDto(userId, eventId);
         log.info("Request to find eventRequests {}", paramEventDto);
         return eventService.findRequest(paramEventDto);
     }
 
-    @PatchMapping("/users/{userId}/events/{eventId}/requests")
+    @PatchMapping("/{userId}/events/{eventId}/requests")
     public EventRequestStatusUpdateResult updateEventRequest(@PathVariable long userId,
                                                              @PathVariable long eventId,
                                                              @RequestBody EventRequestStatusUpdateRequest updateEvent) {

@@ -17,13 +17,13 @@ public class RequestController {
 
     private final RequestService requestService;
 
-    @GetMapping("/users/{userId}/requests")
+    @GetMapping("/{userId}/requests")
     public List<ParticipationRequestDto> findRequest(@PathVariable long userId) {
         log.info("Request to find requests by user ID = {}", userId);
         return requestService.findRequest(userId);
     }
 
-    @PostMapping("/users/{userId}/requests")
+    @PostMapping("/{userId}/requests")
     @ResponseStatus(HttpStatus.CREATED)
     public ParticipationRequestDto createRequest(@PathVariable long userId,
                                                  @RequestParam long eventId) {
@@ -31,7 +31,7 @@ public class RequestController {
         return requestService.createRequest(userId, eventId);
     }
 
-    @PatchMapping("/users/{userId}/requests/{requestId}/cancel")
+    @PatchMapping("/{userId}/requests/{requestId}/cancel")
     public ParticipationRequestDto cancelRequest(@PathVariable long userId,
                                                  @PathVariable long requestId) {
         log.info("Request to cancellation of the request ID = {}", requestId);

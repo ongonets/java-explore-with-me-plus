@@ -15,12 +15,19 @@ import java.time.LocalDateTime;
 @Setter
 @ToString
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@AllArgsConstructor
 public class Request {
+
+    public Request(Event event, User user) {
+        this.event = event;
+        this.user = user;
+        status = RequestStatus.PENDING;
+        created = LocalDateTime.now();
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     long id;
+
     @ManyToOne
     @JoinColumn(name = "event_id")
     Event event;

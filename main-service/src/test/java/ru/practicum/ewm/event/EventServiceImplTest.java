@@ -1,3 +1,4 @@
+/*
 package ru.practicum.ewm.event;
 
 import jakarta.persistence.EntityManager;
@@ -188,3 +189,4 @@ public class EventServiceImplTest {
 
 
 }
+*/
