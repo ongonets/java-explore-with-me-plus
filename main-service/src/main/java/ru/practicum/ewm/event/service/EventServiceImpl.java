@@ -4,8 +4,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.ewm.StatClient;
 import ru.practicum.ewm.category.model.Category;
 import ru.practicum.ewm.category.repository.CategoryRepository;
+import ru.practicum.ewm.dto.HitDto;
+import ru.practicum.ewm.dto.ParamDto;
+import ru.practicum.ewm.dto.StatDto;
 import ru.practicum.ewm.errorHandler.exception.NotFoundException;
 import ru.practicum.ewm.event.dto.*;
 import ru.practicum.ewm.event.mapper.EventMapper;
@@ -20,6 +24,7 @@ import ru.practicum.ewm.user.model.User;
 import ru.practicum.ewm.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -37,14 +42,23 @@ public class EventServiceImpl implements EventService {
     private final RequestRepository requestRepository;
     private final EventMapper eventMapper;
     private final RequestMapper requestMapper;
+    private final StatClient statClient;
+
+    private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
 
     @Override
-    public Collection<EventShortDto> findBy(long userId, SearchEventDto searchEventDto) {
-        User user = getUser(userId);
-        List<Event> events = eventRepository.findByInitiator(user, searchEventDto.getSize(), searchEventDto.getFrom());
+    public Collection<EventShortDto> findBy(PrivateSearchEventDto privateSearchEventDto) {
+        User user = getUser(privateSearchEventDto.getUserId());
+        List<Event> events = eventRepository
+                .findByInitiator(user, privateSearchEventDto.getSize(), privateSearchEventDto.getFrom());
         Map<Long, Long> countConfirmedRequest = getCountConfirmedRequest(events);
+        Map<Long, Long> stat = getStat(events);
+        addHit("/events",privateSearchEventDto.getIp());
         return events.stream()
-                .map(event ->  eventMapper.mapToShortDto(event, null, countConfirmedRequest.get(event.getId())))
+                .map(event ->  eventMapper.mapToShortDto(event,
+                        stat.get(event.getId()),
+                        countConfirmedRequest.get(event.getId())))
                 .collect(Collectors.toList());
     }
 
@@ -64,10 +78,12 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public EventFullDto findBy(ParamEventDto paramEventDto) {
+    public EventFullDto findBy(ParamEventDto paramEventDto, String ip) {
         Event event = getEvent(paramEventDto);
         Map<Long, Long> countConfirmedRequest = getCountConfirmedRequest(List.of(event));
-        return eventMapper.mapToFullDto(event, null, countConfirmedRequest.get(event.getId()));
+        Map<Long, Long> stat = getStat(List.of(event));
+        addHit(createEventUri(event), ip);
+        return eventMapper.mapToFullDto(event, stat.get(event.getId()), countConfirmedRequest.get(event.getId()));
     }
 
     @Override
@@ -138,5 +154,33 @@ public class EventServiceImpl implements EventService {
     private Map<Long, Long> getCountConfirmedRequest(List<Event> events) {
         return requestRepository.findConfirmedRequest(events)
                 .collect(Collectors.toMap(RequestCountDto::getEventId, RequestCountDto::getCount));
+    }
+
+    private Map<Long, Long> getStat(List<Event> events) {
+        List<String> uris = events.stream().map(this::createEventUri).toList();
+        String start = events.stream().map(Event::getCreatedOn).sorted().findFirst().get().format(dateTimeFormatter);
+        String end = LocalDateTime.now().format(dateTimeFormatter);
+        ParamDto paramDto = new ParamDto(start, end, uris, false);
+        List<StatDto> statDto = statClient.stat(paramDto);
+        return statDto.stream().map(dto -> new StatEventDto(parseUri(dto.getUri()), dto.getHits()))
+                .collect(Collectors.toMap(StatEventDto::getEventId, StatEventDto::getHits));
+    }
+
+    private void addHit(String uri, String ip) {
+        HitDto hitDto = new HitDto(0,
+                "ewm-main-service",
+                uri,
+                ip,
+                LocalDateTime.now().format(dateTimeFormatter));
+        statClient.hit(hitDto);
+    }
+
+    private int parseUri(String uri) {
+        String[] split = uri.split("/");
+        return Integer.parseInt(split[2]);
+    }
+
+    private String createEventUri(Event event) {
+        return String.format("/event/%d", event.getId());
     }
 }

@@ -128,11 +128,13 @@ public class EventServiceImplTest {
         ParamEventDto paramEventDto = new ParamEventDto(sourceEvent.getInitiator().getId(), sourceEvent.getId());
 
         // when
-        EventFullDto targetEvent = eventService.findBy(paramEventDto);
+        EventFullDto targetEvent = eventService.findBy(paramEventDto, "127.0.0.1");
+        EventFullDto targetEvent2 = eventService.findBy(paramEventDto, "127.0.0.2");
+        EventFullDto targetEvent3 = eventService.findBy(paramEventDto, "127.0.0.2");
 
         // then
 
-        assertThat(targetEvent, is(allOf(
+        assertThat(targetEvent3, is(allOf(
                 hasProperty("id", notNullValue()),
                 hasProperty("title", equalTo(sourceEvent.getTitle())),
                 hasProperty("annotation", equalTo(sourceEvent.getAnnotation())),
@@ -147,7 +149,7 @@ public class EventServiceImplTest {
 
         // when
          Collection<EventShortDto> targetEvents = eventService
-                 .findBy(sourceEvent.getInitiator().getId(), new SearchEventDto(0L,10L));
+                 .findBy(new PrivateSearchEventDto(sourceEvent.getId(), 0L,10L, "127.0.0.1"));
 
         // then
 

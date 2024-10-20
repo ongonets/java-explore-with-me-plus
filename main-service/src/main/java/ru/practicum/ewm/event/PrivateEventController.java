@@ -1,6 +1,7 @@
 package ru.practicum.ewm.event;
 
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -22,10 +23,11 @@ public class PrivateEventController {
     @GetMapping("/{userId}/events")
     public Collection<EventShortDto> findAllEvents(@PathVariable long userId,
                                                    @RequestParam(defaultValue = "0") long from,
-                                                   @RequestParam(defaultValue = "10") long size) {
+                                                   @RequestParam(defaultValue = "10") long size,
+                                                   HttpServletRequest request) {
         log.info("Request to find user events {}", userId);
-        SearchEventDto paramEventsDto = new SearchEventDto(from, size);
-        return eventService.findBy(userId, paramEventsDto);
+        PrivateSearchEventDto paramEventsDto = new PrivateSearchEventDto(userId, from, size, request.getRemoteAddr());
+        return eventService.findBy(paramEventsDto);
     }
 
     @PostMapping("/{userId}/events")
@@ -36,10 +38,10 @@ public class PrivateEventController {
     }
 
     @GetMapping("/{userId}/events/{eventId}")
-    public EventFullDto findEvent(@PathVariable long userId, @PathVariable long eventId) {
+    public EventFullDto findEvent(@PathVariable long userId, @PathVariable long eventId, HttpServletRequest request) {
         ParamEventDto paramEventDto = new ParamEventDto(userId, eventId);
         log.info("Request to find event {}", paramEventDto);
-        return eventService.findBy(paramEventDto);
+        return eventService.findBy(paramEventDto, request.getRemoteAddr());
     }
 
     @PatchMapping("/{userId}/events/{eventId}")
