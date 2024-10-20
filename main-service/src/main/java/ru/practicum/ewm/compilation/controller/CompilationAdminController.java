@@ -16,7 +16,6 @@ import ru.practicum.ewm.compilation.service.CompilationService;
 @RequiredArgsConstructor
 public class CompilationAdminController {
 
-    @Autowired
     private final CompilationService compilationService;
 
     @PostMapping
