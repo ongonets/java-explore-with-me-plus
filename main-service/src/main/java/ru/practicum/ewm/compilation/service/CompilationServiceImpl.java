@@ -1,6 +1,7 @@
 package ru.practicum.ewm.compilation.service;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -13,12 +14,15 @@ import ru.practicum.ewm.compilation.mapper.CompilationMapper;
 import ru.practicum.ewm.compilation.model.Compilation;
 import ru.practicum.ewm.compilation.repository.CompilationRepository;
 import ru.practicum.ewm.errorHandler.exception.NotFoundException;
+import ru.practicum.ewm.event.model.Event;
+import ru.practicum.ewm.event.repository.EventRepository;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Builder
 @RequiredArgsConstructor
 @AllArgsConstructor
 public class CompilationServiceImpl implements CompilationService {
@@ -30,7 +34,7 @@ public class CompilationServiceImpl implements CompilationService {
     @Override
     @Transactional
     public CompilationDto saveCompilation(NewCompilationDto newCompilationDto) {
-        List<Event> events = eventRepository.findAllByIdIn(newCompilationDto.getEvents());
+        List<Event> events = eventRepository.findAllById(newCompilationDto.getEvents());
         Compilation compilation = Compilation.builder()
                 .pinned(newCompilationDto.getPinned())
                 .title(newCompilationDto.getTitle())
@@ -52,7 +56,7 @@ public class CompilationServiceImpl implements CompilationService {
                 () -> new NotFoundException("Compilation not found"));
         var eventsIds = updateCompilationRequest.getEvents();
         if (eventsIds != null) {
-            var events = eventRepository.findAllByIdIn(updateCompilationRequest.getEvents());
+            var events = eventRepository.findAllById(updateCompilationRequest.getEvents());
             old.setEvents(new HashSet<>(events));
         }
         if (updateCompilationRequest.getPinned() != null)
