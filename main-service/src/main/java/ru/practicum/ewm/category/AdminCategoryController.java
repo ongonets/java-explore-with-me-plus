@@ -2,7 +2,6 @@ package ru.practicum.ewm.category;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -12,46 +11,32 @@ import ru.practicum.ewm.category.dto.CategoryDto;
 import ru.practicum.ewm.category.dto.NewCategoryDto;
 import ru.practicum.ewm.category.service.CategoryService;
 
-import java.util.List;
-
 @Slf4j
 @Validated
 @RestController
 @RequiredArgsConstructor
-public class CategoryController {
+@RequestMapping(path = "admin/categories")
+public class AdminCategoryController {
     private final CategoryService categoryService;
 
-    @PostMapping(path = "admin/categories")
+    @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public CategoryDto createCategory(@Valid @RequestBody NewCategoryDto request) {
         log.info("Received request to create category: {}", request.getName());
         return categoryService.createCategory(request);
     }
 
-    @DeleteMapping(path = "admin/categories/{catId}")
+    @DeleteMapping("/{catId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteCategory(@Positive @PathVariable long catId) {
         log.info("Received request to delete category with ID = {}", catId);
         categoryService.deleteCategory(catId);
     }
 
-    @PatchMapping(path = "admin/categories/{catId}")
+    @PatchMapping("{catId}")
     public CategoryDto updateCategory(@Valid @RequestBody NewCategoryDto request,
                                       @Positive @PathVariable long catId) {
         log.info("Received request to update category with ID = {}", catId);
         return categoryService.updateCategory(request, catId);
-    }
-
-    @GetMapping(path = "categories/{catId}")
-    public CategoryDto findCategoryById(@Positive @PathVariable long catId) {
-        log.info("Received request to find category with ID = {}", catId);
-        return categoryService.findCategoryById(catId);
-    }
-
-    @GetMapping(path = "categories")
-    public List<CategoryDto> findCategories(@PositiveOrZero @RequestParam(defaultValue = "0") int from,
-                                            @Positive @RequestParam(defaultValue = "10") int size) {
-        log.info("Received request to find categories");
-        return categoryService.findCategories(from, size);
     }
 }
