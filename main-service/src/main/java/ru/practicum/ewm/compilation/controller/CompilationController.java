@@ -15,19 +15,13 @@ import java.util.List;
 
 public class CompilationController {
 
-    @Autowired
     private final CompilationService compilationService;
 
     @GetMapping
     public List<CompilationDto> getCompilations(@RequestParam(defaultValue = "10", required = false) Integer size,
-                                                /*количество элементов в наборе*/
                                                 @Size(min = 0)
                                                 @RequestParam(defaultValue = "0", required = false) Integer from,
-                                                /*количество элементов, которые нужно пропустить для формирования
-                                                текущего набора*/
-                                                @RequestParam(required = false) Boolean pinned
-                                                /*искать только закрепленные/
-                                                не закрепленные подборки*/) {
+                                                @RequestParam(required = false) Boolean pinned) {
         return compilationService.getCompilations(pinned, from, size);
     }
 
