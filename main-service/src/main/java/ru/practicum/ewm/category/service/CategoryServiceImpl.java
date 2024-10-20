@@ -35,6 +35,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public void deleteCategory(long id) {
         Category categoryToDelete = findCategory(id);
+
         categoryRepository.delete(categoryToDelete);
         log.info("Category with ID = {} is deleted", id);
     }
@@ -42,7 +43,9 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public CategoryDto updateCategory(NewCategoryDto request, long id) {
         Category category = findCategory(id);
-        checkForCategoryDuplicates(request.getName());
+        if (!category.getName().equals(request.getName())) {
+            checkForCategoryDuplicates(request.getName());
+        }
         category.setName(request.getName());
         categoryRepository.save(category);
         log.info("Category with ID = {} is updated", id);
