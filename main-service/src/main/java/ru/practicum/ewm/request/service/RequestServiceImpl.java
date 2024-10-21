@@ -43,6 +43,9 @@ public class RequestServiceImpl implements RequestService {
         Event event = getEvent(eventId);
         validateRequest(user, event);
         Request request = new Request(event, user);
+        if(!event.isRequestModeration()) {
+            request.setStatus(RequestStatus.CONFIRMED);
+        }
         requestRepository.save(request);
         return requestMapper.mapToDto(request);
     }
@@ -90,14 +93,11 @@ public class RequestServiceImpl implements RequestService {
     }
 
     private void isRepeatedRequest(User user, List<Request> requests) {
-        requests.stream().filter(request -> request.getUser() == user)
-                .findFirst()
-                .orElseThrow(() -> {
-                            log.error("Request by user ID = {}  is repeated", user.getId());
-                            return new ConflictDataException(
-                                    String.format("Request by user ID = %d  is repeated", user.getId()));
-                        }
-                );
+        if( requests.stream().anyMatch(request -> request.getUser() == user)) {
+            log.error("Request by user ID = {}  is repeated", user.getId());
+            throw  new ConflictDataException(
+                    String.format("Request by user ID = %d  is repeated", user.getId()));
+        }
     }
 
     private void isUserEqualsEventInitiator(User user, Event event) {
@@ -109,7 +109,7 @@ public class RequestServiceImpl implements RequestService {
     }
 
     private void isEventPublished(Event event) {
-        if (event.getState().equals(EventState.PUBLISHED)) {
+        if (!event.getState().equals(EventState.PUBLISHED)) {
             log.error("Event ID = {} is not published", event.getId());
             throw new ConflictDataException(
                     String.format("Event ID = %d is not published", event.getId()));
@@ -118,7 +118,8 @@ public class RequestServiceImpl implements RequestService {
 
     private void isRequestLimitReached(Event event, List<Request> requests) {
         long count = requests.stream().filter(request -> request.getStatus().equals(RequestStatus.CONFIRMED)).count();
-        if (count > event.getParticipantLimit()) {
+        long limit = event.getParticipantLimit();
+        if (limit != 0 && count > limit) {
             log.error("Event ID = {} request limit is reached", event.getId());
             throw new ConflictDataException(
                     String.format("Event ID = %d request limit is reached", event.getId()));
