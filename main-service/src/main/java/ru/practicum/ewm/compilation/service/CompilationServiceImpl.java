@@ -1,8 +1,7 @@
 package ru.practicum.ewm.compilation.service;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -22,9 +21,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@Builder
 @RequiredArgsConstructor
-@AllArgsConstructor
+@Slf4j
 public class CompilationServiceImpl implements CompilationService {
 
     private final CompilationRepository compilationRepository;
@@ -35,11 +33,10 @@ public class CompilationServiceImpl implements CompilationService {
     @Transactional
     public CompilationDto saveCompilation(NewCompilationDto newCompilationDto) {
         List<Event> events = eventRepository.findAllById(newCompilationDto.getEvents());
-        Compilation compilation = Compilation.builder()
-                .pinned(newCompilationDto.getPinned())
-                .title(newCompilationDto.getTitle())
-                .events(new HashSet<>(events))
-                .build();
+        Compilation compilation = new Compilation();
+        compilation.setPinned(newCompilationDto.getPinned());
+        compilation.setTitle(newCompilationDto.getTitle());
+        compilation.setEvents(new HashSet<>(events));
         Compilation newComp = compilationRepository.save(compilation);
         return compilationMapper.mapToCompilationDto(newComp);
     }

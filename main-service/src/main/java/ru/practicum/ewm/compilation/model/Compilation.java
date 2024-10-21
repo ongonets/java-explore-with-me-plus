@@ -1,17 +1,15 @@
 package ru.practicum.ewm.compilation.model;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 import ru.practicum.ewm.event.model.Event;
 
 import java.util.Set;
 
-@Data
+@Getter
+@Setter
 @Entity
-@Builder
 @Table(name = "compilations")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Compilation {
