@@ -11,14 +11,17 @@ import ru.practicum.ewm.event.model.Event;
 import ru.practicum.ewm.request.dto.UpdateEventUserRequest;
 import ru.practicum.ewm.user.mapper.UserMapper;
 
+import java.time.LocalDateTime;
+
 @Mapper(componentModel = "spring",
         nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.SET_TO_NULL,
-uses = {UserMapper.class, CategoryMapper.class})
+        uses = {UserMapper.class, CategoryMapper.class}, imports = {LocalDateTime.class})
 public interface EventMapper {
 
     @Mapping(target = "eventDate", dateFormat = "yyyy-MM-dd HH:mm:ss")
     @Mapping(expression = "java(newEvent.getLocation().getLat())", target = "latitude")
     @Mapping(expression = "java(newEvent.getLocation().getLon())", target = "longitude")
+    @Mapping(target = "publishedOn", expression = "java(LocalDateTime.now())")
     @Mapping(target = "category", ignore = true)
     Event map(NewEventDto newEvent);
 
