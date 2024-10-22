@@ -1,7 +1,6 @@
 package ru.practicum.ewm.event.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import jakarta.validation.constraints.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,33 +16,33 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class UpdateEventAdminRequest {
 
-    @Size(min = 20, max = 2000)
-    @NotBlank
+    //@Size(min = 20, max = 2000)
+    //@NotBlank
     String annotation;
 
-    @Positive
-    long category;
+    //@Positive
+    Long category;
 
-    @Size(min = 20, max = 7000)
-    @NotBlank
+    //@Size(min = 20, max = 7000)
+    //@NotBlank
     String description;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    @Future
+    //@Future
     LocalDateTime eventDate;
 
     Location location;
 
-    @PositiveOrZero
-    long participantLimit;
+    //@PositiveOrZero
+    Long participantLimit;
 
-    boolean requestModeration;
+    Boolean requestModeration;
 
     EventState stateAction;
 
-    boolean paid;
+    Boolean paid;
 
-    @Size(min = 3, max = 120)
-    @NotBlank
+    //@Size(min = 3, max = 120)
+    //@NotBlank
     String title;
 }

@@ -14,7 +14,7 @@ import ru.practicum.ewm.user.mapper.UserMapper;
 import java.time.LocalDateTime;
 
 @Mapper(componentModel = "spring",
-        nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.SET_TO_NULL,
+        nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
         uses = {UserMapper.class, CategoryMapper.class}, imports = {LocalDateTime.class})
 public interface EventMapper {
 
@@ -40,4 +40,7 @@ public interface EventMapper {
 
     @Mapping(source = "category", target = "category")
     Event update(@MappingTarget Event event, UpdateEventUserRequest updateEvent, Category category);
+
+    @Mapping(source = "category", target = "category")
+    Event update(@MappingTarget Event event, UpdateEventAdminRequest updateEvent, Category category);
 }

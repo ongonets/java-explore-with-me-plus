@@ -7,7 +7,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import ru.practicum.ewm.event.dto.Location;
 import ru.practicum.ewm.event.model.EventState;
 
 import java.time.LocalDateTime;
@@ -23,7 +22,7 @@ public class UpdateEventUserRequest {
     String annotation;
 
     @Positive
-    long category;
+    Long category;
 
     @Size(min = 20, max = 7000)
     @NotBlank
@@ -36,13 +35,13 @@ public class UpdateEventUserRequest {
     Location location;
 
     @PositiveOrZero
-    long participantLimit;
+    Long participantLimit;
 
-    boolean requestModeration;
+    Boolean requestModeration;
 
-    EventState state;
+    EventState stateAction;
 
-    boolean paid;
+    Boolean paid;
 
     @Size(min = 3, max = 120)
     @NotBlank
