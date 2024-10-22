@@ -17,6 +17,9 @@ import java.time.LocalDateTime;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Request {
 
+    public Request() {
+    }
+
     public Request(Event event, User user) {
         this.event = event;
         this.user = user;

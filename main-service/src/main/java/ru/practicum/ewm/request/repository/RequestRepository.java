@@ -6,7 +6,6 @@ import org.springframework.data.repository.query.Param;
 import ru.practicum.ewm.event.model.Event;
 import ru.practicum.ewm.request.dto.RequestCountDto;
 import ru.practicum.ewm.request.model.Request;
-import ru.practicum.ewm.request.model.RequestStatus;
 import ru.practicum.ewm.user.model.User;
 
 import java.util.List;
@@ -17,14 +16,6 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
     List<Request> findAllByEvent(Event event);
 
     List<Request> findAllByUser(User user);
-
-
-    @Query("update Request r set r.status = :status where r.id in :ids")
-    void updateStatus(@Param("status") RequestStatus status, @Param("ids") List<Long> requestIds);
-
-    @Query("update Request r set r.status = :status where r = :request")
-    Request updateStatus(@Param("status") RequestStatus status, @Param("request") Request request);
-
 
     @Query("SELECT new ru.practicum.ewm.request.dto.RequestCountDto(r.event.id, count(r.id)) " +
             "FROM Request r WHERE r.event IN :events " +

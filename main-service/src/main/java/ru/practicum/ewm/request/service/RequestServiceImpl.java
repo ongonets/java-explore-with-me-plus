@@ -43,7 +43,7 @@ public class RequestServiceImpl implements RequestService {
         Event event = getEvent(eventId);
         validateRequest(user, event);
         Request request = new Request(event, user);
-        if(!event.isRequestModeration()) {
+        if (!event.isRequestModeration()) {
             request.setStatus(RequestStatus.CONFIRMED);
         }
         requestRepository.save(request);
@@ -54,7 +54,8 @@ public class RequestServiceImpl implements RequestService {
     public ParticipationRequestDto cancelRequest(long userId, long requestId) {
         User user = getUser(userId);
         Request request = getRequest(requestId, user);
-        requestRepository.updateStatus(RequestStatus.CANCELED, request);
+        request.setStatus(RequestStatus.CANCELED);
+        requestRepository.save(request);
         return requestMapper.mapToDto(request);
     }
 
@@ -93,7 +94,7 @@ public class RequestServiceImpl implements RequestService {
     }
 
     private void isRepeatedRequest(User user, List<Request> requests) {
-        if( requests.stream().anyMatch(request -> request.getUser() == user)) {
+        if (requests.stream().anyMatch(request -> request.getUser() == user)) {
             log.error("Request by user ID = {}  is repeated", user.getId());
             throw  new ConflictDataException(
                     String.format("Request by user ID = %d  is repeated", user.getId()));
