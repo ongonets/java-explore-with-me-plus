@@ -1,4 +1,4 @@
-package ru.practicum.ewm.request.dto;
+package ru.practicum.ewm.event.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.*;
@@ -7,7 +7,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import ru.practicum.ewm.event.dto.Location;
 import ru.practicum.ewm.event.model.EventState;
 
 import java.time.LocalDateTime;
@@ -16,7 +15,7 @@ import java.time.LocalDateTime;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @AllArgsConstructor
 @NoArgsConstructor
-public class UpdateEventUserRequest {
+public class UpdateEventAdminRequest {
 
     @Size(min = 20, max = 2000)
     @NotBlank
@@ -40,7 +39,7 @@ public class UpdateEventUserRequest {
 
     boolean requestModeration;
 
-    EventState state;
+    EventState stateAction;
 
     boolean paid;
 

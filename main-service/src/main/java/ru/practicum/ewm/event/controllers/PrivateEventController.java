@@ -1,4 +1,4 @@
-package ru.practicum.ewm.event;
+package ru.practicum.ewm.event.controllers;
 
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,7 +13,7 @@ import ru.practicum.ewm.event.service.EventService;
 import ru.practicum.ewm.request.dto.EventRequestStatusUpdateRequest;
 import ru.practicum.ewm.request.dto.EventRequestStatusUpdateResult;
 import ru.practicum.ewm.request.dto.ParticipationRequestDto;
-import ru.practicum.ewm.request.dto.UpdateEventUserRequest;
+import ru.practicum.ewm.event.dto.UpdateEventUserRequest;
 
 import java.util.Collection;
 import java.util.List;

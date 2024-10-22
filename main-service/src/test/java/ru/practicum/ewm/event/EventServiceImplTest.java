@@ -21,7 +21,7 @@ import ru.practicum.ewm.request.model.Request;
 import ru.practicum.ewm.request.model.RequestStatus;
 import ru.practicum.ewm.event.service.EventService;
 import ru.practicum.ewm.event.service.EventServiceImpl;
-import ru.practicum.ewm.request.dto.UpdateEventUserRequest;
+import ru.practicum.ewm.event.dto.UpdateEventUserRequest;
 import ru.practicum.ewm.user.mapper.UserMapperImpl;
 import ru.practicum.ewm.user.model.User;
 

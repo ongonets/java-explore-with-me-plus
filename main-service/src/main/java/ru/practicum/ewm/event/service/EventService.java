@@ -4,7 +4,7 @@ import ru.practicum.ewm.event.dto.*;
 import ru.practicum.ewm.request.dto.EventRequestStatusUpdateRequest;
 import ru.practicum.ewm.request.dto.EventRequestStatusUpdateResult;
 import ru.practicum.ewm.request.dto.ParticipationRequestDto;
-import ru.practicum.ewm.request.dto.UpdateEventUserRequest;
+import ru.practicum.ewm.event.dto.UpdateEventUserRequest;
 
 import java.util.Collection;
 import java.util.List;
@@ -22,4 +22,8 @@ public interface EventService {
 
     EventRequestStatusUpdateResult updateRequest(ParamEventDto paramEventDto,
                                                  EventRequestStatusUpdateRequest updateRequest);
+
+    Collection<EventShortDto> findBy(AdminSearchEventDto adminSearchEventDto);
+
+    EventFullDto update(long eventId, UpdateEventAdminRequest updateEvent);
 }

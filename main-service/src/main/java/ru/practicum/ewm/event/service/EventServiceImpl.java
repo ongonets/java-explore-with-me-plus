@@ -119,6 +119,16 @@ public class EventServiceImpl implements EventService {
         return requestMapper.mapToRequestStatus(confirmedRequests, rejectedRequests);
     }
 
+    @Override
+    public Collection<EventShortDto> findBy(AdminSearchEventDto adminSearchEventDto) {
+        return null;
+    }
+
+    @Override
+    public EventFullDto update(long eventId, UpdateEventAdminRequest updateEvent) {
+        return null;
+    }
+
     private Category getCategory(long categoryId) {
         return categoryRepository.findById(categoryId)
                 .orElseThrow(() -> {
