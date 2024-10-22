@@ -10,13 +10,17 @@ import ru.practicum.ewm.category.repository.CategoryRepository;
 import ru.practicum.ewm.dto.HitDto;
 import ru.practicum.ewm.dto.ParamDto;
 import ru.practicum.ewm.dto.StatDto;
+import ru.practicum.ewm.errorHandler.exception.ConflictDataException;
 import ru.practicum.ewm.errorHandler.exception.NotFoundException;
 import ru.practicum.ewm.event.dto.*;
 import ru.practicum.ewm.event.mapper.EventMapper;
 import ru.practicum.ewm.event.model.Event;
 import ru.practicum.ewm.event.model.EventState;
 import ru.practicum.ewm.event.repository.EventRepository;
-import ru.practicum.ewm.request.dto.*;
+import ru.practicum.ewm.request.dto.EventRequestStatusUpdateRequest;
+import ru.practicum.ewm.request.dto.EventRequestStatusUpdateResult;
+import ru.practicum.ewm.request.dto.ParticipationRequestDto;
+import ru.practicum.ewm.request.dto.RequestCountDto;
 import ru.practicum.ewm.request.mapper.RequestMapper;
 import ru.practicum.ewm.request.model.Request;
 import ru.practicum.ewm.request.model.RequestStatus;
@@ -80,7 +84,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public EventFullDto findBy(ParamEventDto paramEventDto, String ip) {
-        Event event = getEvent(paramEventDto);
+        Event event = getUserEvent(paramEventDto);
         Map<Long, Long> countConfirmedRequest = getCountConfirmedRequest(List.of(event));
         Map<Long, Long> stat = getStat(List.of(event));
         addHit(createEventUri(event), ip);
@@ -90,8 +94,11 @@ public class EventServiceImpl implements EventService {
     @Override
     @Transactional
     public EventFullDto update(ParamEventDto paramEventDto, UpdateEventUserRequest updateEvent) {
-        Event event = getEvent(paramEventDto);
-        Category category = getCategory(updateEvent.getCategory());
+        Event event = getUserEvent(paramEventDto);
+        if (updateEvent.getStateAction() != null && updateEvent.getStateAction().equals(EventState.CANCEL_REVIEW)) {
+            event.setState(EventState.CANCELED);
+        }
+        Category category = checkCategory(updateEvent.getCategory());
         Event updatedEvent = eventMapper.update(event, updateEvent, category);
         eventRepository.save(updatedEvent);
         Map<Long, Long> countConfirmedRequest = getCountConfirmedRequest(List.of(event));
@@ -100,7 +107,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public List<ParticipationRequestDto> findRequest(ParamEventDto paramEventDto) {
-        Event event = getEvent(paramEventDto);
+        Event event = getUserEvent(paramEventDto);
         List<Request> requests = requestRepository.findAllByEvent(event);
         return requestMapper.mapToDto(requests);
     }
@@ -109,12 +116,20 @@ public class EventServiceImpl implements EventService {
     @Transactional
     public EventRequestStatusUpdateResult updateRequest(ParamEventDto paramEventDto,
                                                         EventRequestStatusUpdateRequest updateRequest) {
-        Event event = getEvent(paramEventDto);
-        requestRepository.updateStatus(updateRequest.getStatus(), updateRequest.getRequestIds());
+        Event event = getUserEvent(paramEventDto);
         List<Request> requests = requestRepository.findAllByEvent(event);
-        List<Request> confirmedRequests = requests.stream()
+        List<Request> updatedRequests = requests.stream()
+                .map(request -> {
+                            if (updateRequest.getRequestIds().contains(request.getId())) {
+                                request.setStatus(updateRequest.getStatus());
+                            }
+                            return request;
+                        }
+                ).toList();
+        requestRepository.saveAll(updatedRequests);
+        List<Request> confirmedRequests = updatedRequests.stream()
                 .filter(request -> request.getStatus().equals(RequestStatus.CONFIRMED)).toList();
-        List<Request> rejectedRequests = requests.stream()
+        List<Request> rejectedRequests = updatedRequests.stream()
                 .filter(request -> request.getStatus().equals(RequestStatus.REJECTED)).toList();
         return requestMapper.mapToRequestStatus(confirmedRequests, rejectedRequests);
     }
@@ -125,8 +140,30 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional
     public EventFullDto update(long eventId, UpdateEventAdminRequest updateEvent) {
-        return null;
+        Event event = getEvent(eventId);
+        checkEventDate(event);
+        if (updateEvent.getStateAction() != null) {
+            switch (updateEvent.getStateAction()) {
+                case PUBLISH_EVENT -> {
+                    checkEventStatePending(event);
+                    event.setPublishedOn(LocalDateTime.now());
+                    event.setState(EventState.PUBLISHED);
+                }
+                case REJECT_EVENT -> {
+                    checkPublished(event);
+                    event.setState(EventState.CANCEL_REVIEW);
+                }
+            }
+        }
+        Category category = checkCategory(updateEvent.getCategory());
+        Event updatedEvent = eventMapper.update(event, updateEvent, category);
+        eventRepository.save(updatedEvent);
+        log.info("Event updated {}", updatedEvent);
+        Map<Long, Long> countConfirmedRequest = getCountConfirmedRequest(List.of(event));
+        Map<Long, Long> stat = getStat(List.of(event));
+        return eventMapper.mapToFullDto(event, stat.get(event.getId()), countConfirmedRequest.get(event.getId()));
     }
 
     private Category getCategory(long categoryId) {
@@ -137,6 +174,14 @@ public class EventServiceImpl implements EventService {
                 });
     }
 
+    private Category checkCategory(Long categoryId) {
+        if (categoryId != null) {
+            return getCategory(categoryId);
+        } else {
+            return null;
+        }
+    }
+
     private User getUser(long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> {
@@ -145,15 +190,19 @@ public class EventServiceImpl implements EventService {
                 });
     }
 
-    private Event getEvent(ParamEventDto paramEventDto) {
-        long userId = paramEventDto.getUserId();
-        long eventId = paramEventDto.getEventId();
-        User user = getUser(userId);
-        Event event = eventRepository.findById(eventId)
+    private Event getEvent(long eventId) {
+        return eventRepository.findById(eventId)
                 .orElseThrow(() -> {
                     log.error("Not found event with ID = {}", eventId);
                     return new NotFoundException(String.format("Not found event with ID = %d", eventId));
                 });
+    }
+
+    private Event getUserEvent(ParamEventDto paramEventDto) {
+        long userId = paramEventDto.getUserId();
+        long eventId = paramEventDto.getEventId();
+        User user = getUser(userId);
+        Event event = getEvent(eventId);
         if (event.getInitiator() != user) {
             log.error("Not found event with ID = {}", eventId);
             throw new NotFoundException(
@@ -193,5 +242,30 @@ public class EventServiceImpl implements EventService {
 
     private String createEventUri(Event event) {
         return String.format("/event/%d", event.getId());
+    }
+
+    private void checkEventDate(Event event) {
+        LocalDateTime eventDate = event.getEventDate();
+        if (eventDate.minusHours(1).isBefore(LocalDateTime.now())) {
+            log.error("Event ID = {} is not available for change now", event.getId());
+            throw new ConflictDataException(
+                    String.format("Event ID = %d is not available for change now", event.getId()));
+        }
+    }
+
+    private void checkEventStatePending(Event event) {
+        if (!event.getState().equals(EventState.PENDING)) {
+            log.error("Event ID = {} not in the status for review", event.getId());
+            throw new ConflictDataException(
+                    String.format("Event ID = %d not in the status for review", event.getId()));
+        }
+    }
+
+    private void checkPublished(Event event) {
+        if (!event.getState().equals(EventState.PUBLISHED)) {
+            log.error("Event ID = {} not in the status for review", event.getId());
+            throw new ConflictDataException(
+                    String.format("Event ID = %d not in the status for review", event.getId()));
+        }
     }
 }
