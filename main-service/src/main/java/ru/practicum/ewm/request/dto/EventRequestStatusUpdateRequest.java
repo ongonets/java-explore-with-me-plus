@@ -1,5 +1,6 @@
 package ru.practicum.ewm.request.dto;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -14,6 +15,10 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class EventRequestStatusUpdateRequest {
+
+    @NotNull
     List<Long> requestIds;
+
+    @NotNull
     RequestStatus status;
 }

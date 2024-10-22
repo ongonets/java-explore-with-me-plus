@@ -2,6 +2,8 @@ package ru.practicum.ewm.event;
 
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -25,7 +27,7 @@ public class PrivateEventController {
     private final EventService eventService;
 
     @GetMapping("/{userId}/events")
-    public Collection<EventShortDto> findAllEvents(@PathVariable long userId,
+    public Collection<EventShortDto> findAllEvents(@Positive @PathVariable long userId,
                                                    @RequestParam(defaultValue = "0") long from,
                                                    @RequestParam(defaultValue = "10") long size,
                                                    HttpServletRequest request) {
@@ -36,13 +38,16 @@ public class PrivateEventController {
 
     @PostMapping("/{userId}/events")
     @ResponseStatus(value = HttpStatus.CREATED)
-    public EventFullDto createEvents(@PathVariable long userId, @RequestBody NewEventDto newEvent) {
+    public EventFullDto createEvents(@Positive @PathVariable long userId,
+                                     @Valid @RequestBody NewEventDto newEvent) {
         log.info("Request to create event {} by user {}", newEvent,userId);
         return eventService.create(userId, newEvent);
     }
 
     @GetMapping("/{userId}/events/{eventId}")
-    public EventFullDto findEvent(@PathVariable long userId, @PathVariable long eventId, HttpServletRequest request) {
+    public EventFullDto findEvent(@Positive @PathVariable long userId,
+                                  @Positive @PathVariable long eventId,
+                                  HttpServletRequest request) {
         ParamEventDto paramEventDto = new ParamEventDto(userId, eventId);
         String remoteAddr = request.getRemoteAddr();
         log.info("Request to find event {}", paramEventDto);
@@ -50,24 +55,25 @@ public class PrivateEventController {
     }
 
     @PatchMapping("/{userId}/events/{eventId}")
-    public EventFullDto updateEvent(@PathVariable long userId,
-                                    @PathVariable long eventId,
-                                    @RequestBody UpdateEventUserRequest updateEvent) {
+    public EventFullDto updateEvent(@Positive @PathVariable long userId,
+                                    @Positive @PathVariable long eventId,
+                                    @Valid @RequestBody UpdateEventUserRequest updateEvent) {
         ParamEventDto paramEventDto = new ParamEventDto(userId, eventId);
         log.info("Request to update event {}, {}", paramEventDto, updateEvent);
         return eventService.update(paramEventDto, updateEvent);
     }
 
     @GetMapping("/{userId}/events/{eventId}/requests")
-    public List<ParticipationRequestDto> findEventRequest(@PathVariable long userId, @PathVariable long eventId) {
+    public List<ParticipationRequestDto> findEventRequest(@Positive @PathVariable long userId,
+                                                          @Positive @PathVariable long eventId) {
         ParamEventDto paramEventDto = new ParamEventDto(userId, eventId);
         log.info("Request to find eventRequests {}", paramEventDto);
         return eventService.findRequest(paramEventDto);
     }
 
     @PatchMapping("/{userId}/events/{eventId}/requests")
-    public EventRequestStatusUpdateResult updateEventRequest(@PathVariable long userId,
-                                                             @PathVariable long eventId,
+    public EventRequestStatusUpdateResult updateEventRequest(@Positive @PathVariable long userId,
+                                                             @Positive @PathVariable long eventId,
                                                              @RequestBody EventRequestStatusUpdateRequest updateEvent) {
         ParamEventDto paramEventDto = new ParamEventDto(userId, eventId);
         log.info("Request to update eventRequests {}", paramEventDto);
