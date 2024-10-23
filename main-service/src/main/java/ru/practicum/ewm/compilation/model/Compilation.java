@@ -19,5 +19,10 @@ public class Compilation {
     Long id;
     String title;
     Boolean pinned;
+    @ManyToMany
+    @JoinTable(name = "events_compilations",
+            joinColumns = @JoinColumn(name = "compilation_id"),
+            inverseJoinColumns = @JoinColumn(name = "event_id")
+    )
     Set<Event> events;
 }
