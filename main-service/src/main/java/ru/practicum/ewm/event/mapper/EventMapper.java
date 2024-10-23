@@ -1,17 +1,14 @@
 package ru.practicum.ewm.event.mapper;
 
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
-import org.mapstruct.NullValuePropertyMappingStrategy;
+import org.mapstruct.*;
 import ru.practicum.ewm.category.mapper.CategoryMapper;
 import ru.practicum.ewm.category.model.Category;
 import ru.practicum.ewm.event.dto.*;
 import ru.practicum.ewm.event.model.Event;
-import ru.practicum.ewm.event.dto.UpdateEventUserRequest;
 import ru.practicum.ewm.user.mapper.UserMapper;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Mapper(componentModel = "spring",
         nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
@@ -39,8 +36,15 @@ public interface EventMapper {
     Location map(Event event);
 
     @Mapping(source = "category", target = "category")
-    Event update(@MappingTarget Event event, UpdateEventUserRequest updateEvent, Category category);
+    @Mapping(source = "updateEvent.annotation", target = "annotation", qualifiedByName = "unwrap")
+    @Mapping(source = "updateEvent.description", target = "description", qualifiedByName = "unwrap")
+    @Mapping(source = "updateEvent.title", target = "title", qualifiedByName = "unwrap")
+    @Mapping(source = "updateEvent.participantLimit", target = "participantLimit", qualifiedByName = "unwrap")
+    @Mapping(source = "updateEvent.eventDate", target = "eventDate", qualifiedByName = "unwrap")
+    void update(@MappingTarget Event event, UpdateEventUserRequest updateEvent, Category category);
 
-    @Mapping(source = "category", target = "category")
-    Event update(@MappingTarget Event event, UpdateEventAdminRequest updateEvent, Category category);
+    @Named(value = "unwrap")
+    default <T> T unwrap(Optional<T> optional) {
+        return optional.orElse(null);
+    }
 }

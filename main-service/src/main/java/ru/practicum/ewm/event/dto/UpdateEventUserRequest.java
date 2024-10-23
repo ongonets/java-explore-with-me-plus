@@ -10,6 +10,7 @@ import lombok.experimental.FieldDefaults;
 import ru.practicum.ewm.event.model.EventState;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -17,25 +18,19 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class UpdateEventUserRequest {
 
-    @Size(min = 20, max = 2000)
-    @NotBlank
-    String annotation;
 
-    @Positive
-    Long category;
+    Optional<@Size(min = 20, max = 2000) @NotBlank String> annotation;
 
-    @Size(min = 20, max = 7000)
-    @NotBlank
-    String description;
+    Optional<@Positive Long> category;
+
+    Optional<@Size(min = 20, max = 7000) @NotBlank String> description;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    @Future
-    LocalDateTime eventDate;
+    Optional<@Future LocalDateTime> eventDate;
 
     Location location;
 
-    @PositiveOrZero
-    Long participantLimit;
+    Optional<@PositiveOrZero Long> participantLimit;
 
     Boolean requestModeration;
 
@@ -43,7 +38,5 @@ public class UpdateEventUserRequest {
 
     Boolean paid;
 
-    @Size(min = 3, max = 120)
-    @NotBlank
-    String title;
+    Optional<@Size(min = 3, max = 120) @NotBlank String> title;
 }

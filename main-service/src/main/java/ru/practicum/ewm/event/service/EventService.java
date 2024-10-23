@@ -25,5 +25,5 @@ public interface EventService {
 
     Collection<EventShortDto> findBy(AdminSearchEventDto adminSearchEventDto);
 
-    EventFullDto update(long eventId, UpdateEventAdminRequest updateEvent);
+    EventFullDto update(long eventId, UpdateEventUserRequest updateEvent);
 }

@@ -33,6 +33,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -99,10 +100,10 @@ public class EventServiceImpl implements EventService {
             event.setState(EventState.CANCELED);
         }
         Category category = checkCategory(updateEvent.getCategory());
-        Event updatedEvent = eventMapper.update(event, updateEvent, category);
-        eventRepository.save(updatedEvent);
+         eventMapper.update(event, updateEvent, category);
+        eventRepository.save(event);
         Map<Long, Long> countConfirmedRequest = getCountConfirmedRequest(List.of(event));
-        return eventMapper.mapToFullDto(updatedEvent, null, countConfirmedRequest.get(event.getId()));
+        return eventMapper.mapToFullDto(event, null, countConfirmedRequest.get(event.getId()));
     }
 
     @Override
@@ -141,7 +142,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     @Transactional
-    public EventFullDto update(long eventId, UpdateEventAdminRequest updateEvent) {
+    public EventFullDto update(long eventId, UpdateEventUserRequest updateEvent) {
         Event event = getEvent(eventId);
         checkEventDate(event);
         if (updateEvent.getStateAction() != null) {
@@ -158,9 +159,9 @@ public class EventServiceImpl implements EventService {
             }
         }
         Category category = checkCategory(updateEvent.getCategory());
-        Event updatedEvent = eventMapper.update(event, updateEvent, category);
-        eventRepository.save(updatedEvent);
-        log.info("Event updated {}", updatedEvent);
+        eventMapper.update(event, updateEvent, category);
+        eventRepository.save(event);
+        log.info("Event updated {}", event);
         Map<Long, Long> countConfirmedRequest = getCountConfirmedRequest(List.of(event));
         Map<Long, Long> stat = getStat(List.of(event));
         return eventMapper.mapToFullDto(event, stat.get(event.getId()), countConfirmedRequest.get(event.getId()));
@@ -174,9 +175,9 @@ public class EventServiceImpl implements EventService {
                 });
     }
 
-    private Category checkCategory(Long categoryId) {
+    private Category checkCategory(Optional<Long> categoryId) {
         if (categoryId != null) {
-            return getCategory(categoryId);
+            return getCategory(categoryId.get());
         } else {
             return null;
         }
