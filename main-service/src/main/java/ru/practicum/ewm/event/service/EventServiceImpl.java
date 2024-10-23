@@ -100,7 +100,6 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public Collection<EventShortDto> findBy(AdminSearchEventDto adminSearchEventDto) {
-
         return null;
     }
 

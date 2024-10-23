@@ -35,6 +35,7 @@ public interface EventMapper {
     @Mapping(source = "longitude", target = "lon")
     Location map(Event event);
 
+    @Mapping(target = "id", ignore = true)
     @Mapping(source = "category", target = "category")
     @Mapping(source = "updateEvent.annotation", target = "annotation", qualifiedByName = "unwrap")
     @Mapping(source = "updateEvent.description", target = "description", qualifiedByName = "unwrap")
