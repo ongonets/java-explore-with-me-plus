@@ -14,6 +14,7 @@ import ru.practicum.ewm.errorHandler.exception.ConflictDataException;
 import ru.practicum.ewm.errorHandler.exception.NotFoundException;
 import ru.practicum.ewm.event.dto.*;
 import ru.practicum.ewm.event.mapper.EventMapper;
+import ru.practicum.ewm.event.model.ActionState;
 import ru.practicum.ewm.event.model.Event;
 import ru.practicum.ewm.event.model.EventState;
 import ru.practicum.ewm.event.repository.EventRepository;
@@ -96,9 +97,7 @@ public class EventServiceImpl implements EventService {
     @Transactional
     public EventFullDto update(ParamEventDto paramEventDto, UpdateEventUserRequest updateEvent) {
         Event event = getUserEvent(paramEventDto);
-        if (updateEvent.getStateAction() != null && updateEvent.getStateAction().equals(EventState.CANCEL_REVIEW)) {
-            event.setState(EventState.CANCELED);
-        }
+        updateEventsStatus(event, updateEvent);
         Category category = checkCategory(updateEvent.getCategory());
          eventMapper.update(event, updateEvent, category);
         eventRepository.save(event);
@@ -145,19 +144,7 @@ public class EventServiceImpl implements EventService {
     public EventFullDto update(long eventId, UpdateEventUserRequest updateEvent) {
         Event event = getEvent(eventId);
         checkEventDate(event);
-        if (updateEvent.getStateAction() != null) {
-            switch (updateEvent.getStateAction()) {
-                case PUBLISH_EVENT -> {
-                    checkEventStatePending(event);
-                    event.setPublishedOn(LocalDateTime.now());
-                    event.setState(EventState.PUBLISHED);
-                }
-                case REJECT_EVENT -> {
-                    checkPublished(event);
-                    event.setState(EventState.CANCEL_REVIEW);
-                }
-            }
-        }
+        updateEventsStatus(event, updateEvent);
         Category category = checkCategory(updateEvent.getCategory());
         eventMapper.update(event, updateEvent, category);
         eventRepository.save(event);
@@ -267,6 +254,26 @@ public class EventServiceImpl implements EventService {
             log.error("Event ID = {} not in the status for review", event.getId());
             throw new ConflictDataException(
                     String.format("Event ID = %d not in the status for review", event.getId()));
+        }
+    }
+
+    private void updateEventsStatus(Event event, UpdateEventUserRequest updateEvent) {
+        ActionState actionState;
+        if (updateEvent.getStateAction() != null) {
+            actionState = updateEvent.getStateAction();
+        } else {return;}
+        switch (actionState) {
+            case PUBLISH_EVENT -> {
+                checkEventStatePending(event);
+                event.setPublishedOn(LocalDateTime.now());
+                event.setState(EventState.PUBLISHED);
+            }
+            case REJECT_EVENT -> {
+                checkPublished(event);
+                event.setState(EventState.CANCELED);
+            }
+            case CANCEL_REVIEW -> event.setState(EventState.CANCELED);
+            case SEND_TO_REVIEW -> event.setState(EventState.PENDING);
         }
     }
 }

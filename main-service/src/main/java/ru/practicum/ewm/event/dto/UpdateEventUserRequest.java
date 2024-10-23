@@ -7,7 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import ru.practicum.ewm.event.model.EventState;
+import ru.practicum.ewm.event.model.ActionState;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -34,7 +34,7 @@ public class UpdateEventUserRequest {
 
     Boolean requestModeration;
 
-    EventState stateAction;
+    ActionState stateAction;
 
     Boolean paid;
 
