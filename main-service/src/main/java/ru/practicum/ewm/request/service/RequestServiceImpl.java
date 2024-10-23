@@ -6,9 +6,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.errorHandler.exception.ConflictDataException;
 import ru.practicum.ewm.errorHandler.exception.NotFoundException;
+import ru.practicum.ewm.event.dto.ParamEventDto;
 import ru.practicum.ewm.event.model.Event;
 import ru.practicum.ewm.event.model.EventState;
 import ru.practicum.ewm.event.repository.EventRepository;
+import ru.practicum.ewm.request.dto.EventRequestStatusUpdateRequest;
+import ru.practicum.ewm.request.dto.EventRequestStatusUpdateResult;
 import ru.practicum.ewm.request.dto.ParticipationRequestDto;
 import ru.practicum.ewm.request.mapper.RequestMapper;
 import ru.practicum.ewm.request.model.Request;
@@ -17,6 +20,7 @@ import ru.practicum.ewm.request.repository.RequestRepository;
 import ru.practicum.ewm.user.model.User;
 import ru.practicum.ewm.user.repository.UserRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -59,6 +63,33 @@ public class RequestServiceImpl implements RequestService {
         return requestMapper.mapToDto(request);
     }
 
+    @Override
+    public List<ParticipationRequestDto> findRequest(ParamEventDto paramEventDto) {
+        Event event = getUserEvent(paramEventDto);
+        List<Request> requests = requestRepository.findAllByEvent(event);
+        return requestMapper.mapToDto(requests);
+    }
+
+    @Override
+    @Transactional
+    public EventRequestStatusUpdateResult updateRequest(ParamEventDto paramEventDto,
+                                                        EventRequestStatusUpdateRequest updateRequest) {
+        Event event = getUserEvent(paramEventDto);
+        List<Request> requests = requestRepository.findAllByEvent(event);
+        RequestStatus status = updateRequest.getStatus();
+        List<Request> updatedRequests = new ArrayList<>();
+        switch (status) {
+            case REJECTED -> updatedRequests = canceledRequest(requests, updateRequest);
+            case CONFIRMED -> updatedRequests = confirmedRequest(event, requests, updateRequest);
+        }
+        requestRepository.saveAll(updatedRequests);
+        List<Request> confirmedRequests = updatedRequests.stream()
+                .filter(request -> request.getStatus().equals(RequestStatus.CONFIRMED)).toList();
+        List<Request> rejectedRequests = updatedRequests.stream()
+                .filter(request -> request.getStatus().equals(RequestStatus.REJECTED)).toList();
+        return requestMapper.mapToRequestStatus(confirmedRequests, rejectedRequests);
+    }
+
     private User getUser(long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> {
@@ -73,6 +104,19 @@ public class RequestServiceImpl implements RequestService {
                     log.error("Not found event with ID = {}", eventId);
                     return new NotFoundException(String.format("Not found event with ID = %d", eventId));
                 });
+    }
+
+    private Event getUserEvent(ParamEventDto paramEventDto) {
+        long userId = paramEventDto.getUserId();
+        long eventId = paramEventDto.getEventId();
+        User user = getUser(userId);
+        Event event = getEvent(eventId);
+        if (event.getInitiator() != user) {
+            log.error("Not found event with ID = {}", eventId);
+            throw new NotFoundException(
+                    String.format("Not found event with ID = %d", eventId));
+        }
+        return event;
     }
 
     private Request getRequest(long requestId, User user) {
@@ -134,4 +178,59 @@ public class RequestServiceImpl implements RequestService {
                     String.format("Event ID = %d is not own request ID = %d", user.getId(), request.getId()));
         }
     }
+
+    private void checkEventForRequestLimit(Event event,
+                                           List<Request> requests,
+                                           EventRequestStatusUpdateRequest updateRequest) {
+        long limit = event.getParticipantLimit();
+        if (limit == 0) {
+            return;
+        }
+        long countUpdateRequest = requests.size();
+        long countConfirmedRequests = requests.stream()
+                .filter(request -> request.getStatus().equals(RequestStatus.CONFIRMED)).count();
+        if (countConfirmedRequests + countUpdateRequest > limit) {
+            log.error("Event ID = {} request limit is reached", event.getId());
+            throw new ConflictDataException(
+                    String.format("Event ID = %d request limit is reached", event.getId()));
+        }
+    }
+
+    private void checkConfirmedRequest(List<Request> requests,
+                                       EventRequestStatusUpdateRequest updateRequest) {
+        boolean match = requests.stream().anyMatch(request -> updateRequest.getRequestIds().contains(request.getId())
+                && request.getStatus().equals(RequestStatus.CONFIRMED));
+        if (match) {
+            log.error("Confirmed request canceled {}", updateRequest);
+            throw new ConflictDataException("Confirmed request canceled");
+        }
+    }
+
+    private List<Request> canceledRequest(List<Request> requests,
+                                          EventRequestStatusUpdateRequest updateRequest) {
+        checkConfirmedRequest(requests, updateRequest);
+        return requests.stream()
+                .map(request -> {
+                            if (updateRequest.getRequestIds().contains(request.getId())) {
+                                request.setStatus(RequestStatus.CANCELED);
+                            }
+                            return request;
+                        }
+                ).toList();
+    }
+
+    private List<Request> confirmedRequest(Event event,
+                                           List<Request> requests,
+                                           EventRequestStatusUpdateRequest updateRequest) {
+        checkEventForRequestLimit(event, requests, updateRequest);
+        return requests.stream()
+                .map(request -> {
+                            if (updateRequest.getRequestIds().contains(request.getId())) {
+                                request.setStatus(RequestStatus.CONFIRMED);
+                            }
+                            return request;
+                        }
+                ).toList();
+    }
+
 }

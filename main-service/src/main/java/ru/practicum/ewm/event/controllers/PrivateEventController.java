@@ -10,13 +10,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.event.dto.*;
 import ru.practicum.ewm.event.service.EventService;
-import ru.practicum.ewm.request.dto.EventRequestStatusUpdateRequest;
-import ru.practicum.ewm.request.dto.EventRequestStatusUpdateResult;
-import ru.practicum.ewm.request.dto.ParticipationRequestDto;
-import ru.practicum.ewm.event.dto.UpdateEventUserRequest;
 
 import java.util.Collection;
-import java.util.List;
 
 @RestController
 @RequestMapping(path = "/users")
@@ -61,22 +56,5 @@ public class PrivateEventController {
         ParamEventDto paramEventDto = new ParamEventDto(userId, eventId);
         log.info("Request to update event {}, {}", paramEventDto, updateEvent);
         return eventService.update(paramEventDto, updateEvent);
-    }
-
-    @GetMapping("/{userId}/events/{eventId}/requests")
-    public List<ParticipationRequestDto> findEventRequest(@Positive @PathVariable long userId,
-                                                          @Positive @PathVariable long eventId) {
-        ParamEventDto paramEventDto = new ParamEventDto(userId, eventId);
-        log.info("Request to find eventRequests {}", paramEventDto);
-        return eventService.findRequest(paramEventDto);
-    }
-
-    @PatchMapping("/{userId}/events/{eventId}/requests")
-    public EventRequestStatusUpdateResult updateEventRequest(@Positive @PathVariable long userId,
-                                                             @Positive @PathVariable long eventId,
-                                                             @RequestBody EventRequestStatusUpdateRequest updateEvent) {
-        ParamEventDto paramEventDto = new ParamEventDto(userId, eventId);
-        log.info("Request to update eventRequests {}", paramEventDto);
-        return eventService.updateRequest(paramEventDto, updateEvent);
     }
 }

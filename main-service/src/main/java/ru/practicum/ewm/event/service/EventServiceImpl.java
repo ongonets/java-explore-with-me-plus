@@ -18,13 +18,7 @@ import ru.practicum.ewm.event.model.ActionState;
 import ru.practicum.ewm.event.model.Event;
 import ru.practicum.ewm.event.model.EventState;
 import ru.practicum.ewm.event.repository.EventRepository;
-import ru.practicum.ewm.request.dto.EventRequestStatusUpdateRequest;
-import ru.practicum.ewm.request.dto.EventRequestStatusUpdateResult;
-import ru.practicum.ewm.request.dto.ParticipationRequestDto;
 import ru.practicum.ewm.request.dto.RequestCountDto;
-import ru.practicum.ewm.request.mapper.RequestMapper;
-import ru.practicum.ewm.request.model.Request;
-import ru.practicum.ewm.request.model.RequestStatus;
 import ru.practicum.ewm.request.repository.RequestRepository;
 import ru.practicum.ewm.user.model.User;
 import ru.practicum.ewm.user.repository.UserRepository;
@@ -48,7 +42,6 @@ public class EventServiceImpl implements EventService {
     private final CategoryRepository categoryRepository;
     private final RequestRepository requestRepository;
     private final EventMapper eventMapper;
-    private final RequestMapper requestMapper;
     private final StatClient statClient;
 
     private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -106,36 +99,8 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public List<ParticipationRequestDto> findRequest(ParamEventDto paramEventDto) {
-        Event event = getUserEvent(paramEventDto);
-        List<Request> requests = requestRepository.findAllByEvent(event);
-        return requestMapper.mapToDto(requests);
-    }
-
-    @Override
-    @Transactional
-    public EventRequestStatusUpdateResult updateRequest(ParamEventDto paramEventDto,
-                                                        EventRequestStatusUpdateRequest updateRequest) {
-        Event event = getUserEvent(paramEventDto);
-        List<Request> requests = requestRepository.findAllByEvent(event);
-        List<Request> updatedRequests = requests.stream()
-                .map(request -> {
-                            if (updateRequest.getRequestIds().contains(request.getId())) {
-                                request.setStatus(updateRequest.getStatus());
-                            }
-                            return request;
-                        }
-                ).toList();
-        requestRepository.saveAll(updatedRequests);
-        List<Request> confirmedRequests = updatedRequests.stream()
-                .filter(request -> request.getStatus().equals(RequestStatus.CONFIRMED)).toList();
-        List<Request> rejectedRequests = updatedRequests.stream()
-                .filter(request -> request.getStatus().equals(RequestStatus.REJECTED)).toList();
-        return requestMapper.mapToRequestStatus(confirmedRequests, rejectedRequests);
-    }
-
-    @Override
     public Collection<EventShortDto> findBy(AdminSearchEventDto adminSearchEventDto) {
+
         return null;
     }
 
@@ -257,23 +222,24 @@ public class EventServiceImpl implements EventService {
         }
     }
 
+
     private void updateEventsStatus(Event event, UpdateEventUserRequest updateEvent) {
         ActionState actionState;
         if (updateEvent.getStateAction() != null) {
             actionState = updateEvent.getStateAction();
-        } else {return;}
-        switch (actionState) {
-            case PUBLISH_EVENT -> {
-                checkEventStatePending(event);
-                event.setPublishedOn(LocalDateTime.now());
-                event.setState(EventState.PUBLISHED);
+            switch (actionState) {
+                case PUBLISH_EVENT -> {
+                    checkEventStatePending(event);
+                    event.setPublishedOn(LocalDateTime.now());
+                    event.setState(EventState.PUBLISHED);
+                }
+                case REJECT_EVENT -> {
+                    checkPublished(event);
+                    event.setState(EventState.CANCELED);
+                }
+                case CANCEL_REVIEW -> event.setState(EventState.CANCELED);
+                case SEND_TO_REVIEW -> event.setState(EventState.PENDING);
             }
-            case REJECT_EVENT -> {
-                checkPublished(event);
-                event.setState(EventState.CANCELED);
-            }
-            case CANCEL_REVIEW -> event.setState(EventState.CANCELED);
-            case SEND_TO_REVIEW -> event.setState(EventState.PENDING);
         }
     }
 }
