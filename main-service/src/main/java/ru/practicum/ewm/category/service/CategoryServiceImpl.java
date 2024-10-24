@@ -11,6 +11,7 @@ import ru.practicum.ewm.category.model.Category;
 import ru.practicum.ewm.category.repository.CategoryRepository;
 import ru.practicum.ewm.errorHandler.exception.ConflictDataException;
 import ru.practicum.ewm.errorHandler.exception.NotFoundException;
+import ru.practicum.ewm.event.repository.EventRepository;
 
 import java.util.List;
 
@@ -21,6 +22,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CategoryServiceImpl implements CategoryService {
     private final CategoryRepository categoryRepository;
+    private final EventRepository eventRepository;
     private final CategoryMapper categoryMapper;
 
     @Override
@@ -35,6 +37,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public void deleteCategory(long id) {
         Category categoryToDelete = findCategory(id);
+        checkForLinkedEvents(id);
         categoryRepository.delete(categoryToDelete);
         log.info("Category with ID = {} is deleted", id);
     }
@@ -42,7 +45,9 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public CategoryDto updateCategory(NewCategoryDto request, long id) {
         Category category = findCategory(id);
-        checkForCategoryDuplicates(request.getName());
+        if (!category.getName().equals(request.getName())) {
+            checkForCategoryDuplicates(request.getName());
+        }
         category.setName(request.getName());
         categoryRepository.save(category);
         log.info("Category with ID = {} is updated", id);
@@ -78,6 +83,14 @@ public class CategoryServiceImpl implements CategoryService {
         if (isDuplicate) {
             log.error("Category with name: {} already exists", categoryName);
             throw new ConflictDataException("This category already exists");
+        }
+    }
+
+    private void checkForLinkedEvents(long id) {
+        boolean areEventsLinked = eventRepository.existsByCategoryId(id);
+        if (areEventsLinked) {
+            log.error("There are events in this category");
+            throw new ConflictDataException("You cannot delete this category, there are linked events");
         }
     }
 

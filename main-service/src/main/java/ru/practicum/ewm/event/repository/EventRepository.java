@@ -10,6 +10,9 @@ import java.util.List;
 
 public interface EventRepository extends JpaRepository<Event,Long> {
 
+
     @Query("Select e from Event e where e.initiator = :user order by e.id limit :size offset :from")
     List<Event> findByInitiator(@Param("user") User user,@Param("size") Long size,@Param("from") Long from);
+
+    boolean existsByCategoryId(long catId);
 }
