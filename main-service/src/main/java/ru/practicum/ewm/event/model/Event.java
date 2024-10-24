@@ -34,8 +34,6 @@ public class Event {
     @JoinColumn(name = "user_id")
     User initiator;
 
-    long confirmedRequests;
-
     @Column(name = "created")
     LocalDateTime createdOn;
 
@@ -44,10 +42,11 @@ public class Event {
     @Column(name = "event_date")
     LocalDateTime eventDate;
 
-    float latitude;
+    double latitude;
 
-    float longitude;
+    double longitude;
 
+    @Column(name = "participant_limit")
     long participantLimit;
 
     @Column(name = "published")

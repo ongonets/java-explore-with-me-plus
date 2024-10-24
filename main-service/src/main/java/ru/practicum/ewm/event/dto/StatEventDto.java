@@ -10,7 +10,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @AllArgsConstructor
 @NoArgsConstructor
-public class Location {
-    double lat;
-    double lon;
+public class StatEventDto {
+    long eventId;
+    long hits;
 }

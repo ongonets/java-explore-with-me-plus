@@ -10,7 +10,9 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @AllArgsConstructor
 @NoArgsConstructor
-public class SearchEventDto {
-    Long from;
-    Long size;
+public class PrivateSearchEventDto {
+    long userId;
+    long from;
+    long size;
+    String ip;
 }
