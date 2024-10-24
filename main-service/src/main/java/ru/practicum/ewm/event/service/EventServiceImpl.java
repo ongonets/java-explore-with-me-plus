@@ -214,7 +214,7 @@ public class EventServiceImpl implements EventService {
     }
 
     private void checkPublished(Event event) {
-        if (!event.getState().equals(EventState.PUBLISHED)) {
+        if (event.getState().equals(EventState.PUBLISHED)) {
             log.error("Event ID = {} not in the status for review", event.getId());
             throw new ConflictDataException(
                     String.format("Event ID = %d not in the status for review", event.getId()));
