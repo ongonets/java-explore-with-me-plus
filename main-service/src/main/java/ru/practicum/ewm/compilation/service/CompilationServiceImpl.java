@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.compilation.dto.CompilationDto;
+import ru.practicum.ewm.compilation.dto.GetCompilationsParams;
 import ru.practicum.ewm.compilation.dto.NewCompilationDto;
 import ru.practicum.ewm.compilation.dto.UpdateCompilationRequest;
 import ru.practicum.ewm.compilation.mapper.CompilationMapper;
@@ -60,20 +61,21 @@ public class CompilationServiceImpl implements CompilationService {
     @Transactional(readOnly = true)
     public CompilationDto getCompilation(Long compId) {
         Compilation compilation = findCompilation(compId);
+        log.info("Compilation with ID = {} is found: {}", compId, compilation);
         return compilationMapper.mapToCompilationDto(compilation);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<CompilationDto> getCompilations(Boolean pinned, Integer from, Integer size) {
-        Pageable pageable = PageRequest.of(from / size, size);
-        if (pinned == null) {
+    public List<CompilationDto> getCompilations(GetCompilationsParams params) {
+        Pageable pageable = PageRequest.of(params.getFrom() / params.getSize(), params.getSize());
+        if (!params.isPinned()) {
             return compilationRepository.findAll(pageable)
                     .stream()
                     .map(compilationMapper::mapToCompilationDto)
                     .toList();
         } else {
-            return compilationRepository.getByPinnedOrderByPinnedAsc(pinned, pageable)
+            return compilationRepository.getByPinnedOrderByPinnedAsc(true, pageable)
                     .stream()
                     .map(compilationMapper::mapToCompilationDto)
                     .toList();
@@ -88,7 +90,7 @@ public class CompilationServiceImpl implements CompilationService {
     }
 
     private Set<Event> checkIfEventsPresent(Optional<Set<Long>> eventIds) {
-        if (eventIds != null) {
+        if (eventIds != null && eventIds.isPresent()) {
             return getEvents(eventIds.get());
         } else {
             return Collections.emptySet();
