@@ -1,5 +1,6 @@
 package ru.practicum.ewm.compilation.mapper;
 
+import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
 import ru.practicum.ewm.compilation.dto.CompilationDto;
 import ru.practicum.ewm.compilation.dto.NewCompilationDto;
@@ -14,6 +15,7 @@ public interface CompilationMapper {
 
     CompilationDto mapToCompilationDto(Compilation compilation);
 
+    @Mapping(target = "events", source = "events")
     Compilation mapToCompilation(NewCompilationDto compilationDto, List<Event> events);
 
 

@@ -18,24 +18,22 @@ import ru.practicum.ewm.event.repository.EventRepository;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class CompilationServiceImpl implements CompilationService {
-
     private final CompilationRepository compilationRepository;
     private final CompilationMapper compilationMapper;
     private final EventRepository eventRepository;
 
     @Override
     @Transactional
-    public CompilationDto saveCompilation(NewCompilationDto newCompilationDto) {
-        log.trace("Creating compilation: {}", newCompilationDto.toString());
-        List<Event> events = eventRepository.findAllById(newCompilationDto.getEvents());
-        Compilation compilation = compilationRepository.save(compilationMapper.mapToCompilation(newCompilationDto, events));
-        log.trace("Compilation with id = {}, created", compilation.getId());
+    public CompilationDto saveCompilation(NewCompilationDto request) {
+        List<Event> events = eventRepository.findAllById(request.getEvents());
+        Compilation compilation = compilationMapper.mapToCompilation(request, events);
+        compilation = compilationRepository.save(compilation);
+        log.trace("Compilation with ID = {} created", compilation.getId());
         return compilationMapper.mapToCompilationDto(compilation);
     }
 
@@ -48,9 +46,9 @@ public class CompilationServiceImpl implements CompilationService {
     @Override
     @Transactional
     public CompilationDto updateCompilation(Long compId, UpdateCompilationRequest updateCompilationRequest) {
-        var old = compilationRepository.findById(compId).orElseThrow(
+        Compilation old = compilationRepository.findById(compId).orElseThrow(
                 () -> new NotFoundException("Compilation not found"));
-        var eventsIds = updateCompilationRequest.getEvents();
+        List<Long> eventsIds = updateCompilationRequest.getEvents();
         if (eventsIds != null) {
             var events = eventRepository.findAllById(updateCompilationRequest.getEvents());
             old.setEvents(new HashSet<>(events));
@@ -80,12 +78,12 @@ public class CompilationServiceImpl implements CompilationService {
             return compilationRepository.findAll(pageable)
                     .stream()
                     .map(compilationMapper::mapToCompilationDto)
-                    .collect(Collectors.toList());
+                    .toList();
         } else {
             return compilationRepository.getByPinnedOrderByPinnedAsc(pinned, pageable)
                     .stream()
                     .map(compilationMapper::mapToCompilationDto)
-                    .collect(Collectors.toList());
+                    .toList();
         }
     }
 }

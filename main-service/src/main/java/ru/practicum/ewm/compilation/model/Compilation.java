@@ -13,14 +13,14 @@ import java.util.Set;
 @Table(name = "compilations")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Compilation {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
     String title;
     Boolean pinned;
     @ManyToMany
-    @JoinTable(name = "events_compilations",
+    @JoinTable(
+            name = "compilation_events",
             joinColumns = @JoinColumn(name = "compilation_id"),
             inverseJoinColumns = @JoinColumn(name = "event_id")
     )
