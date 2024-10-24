@@ -92,9 +92,9 @@ public class CompilationServiceImpl implements CompilationService {
         });
     }
 
-    private Set<Event> checkIfEventsPresent(Optional<Set<Long>> eventIds) {
-        if (eventIds != null && eventIds.isPresent()) {
-            return getEvents(eventIds.get());
+    private Set<Event> checkIfEventsPresent(Set<Long> eventIds) {
+        if (eventIds != null && !eventIds.isEmpty()) {
+            return getEvents(eventIds);
         } else {
             return Collections.emptySet();
         }

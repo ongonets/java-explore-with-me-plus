@@ -5,6 +5,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 import ru.practicum.ewm.event.model.Event;
 
+import java.util.Objects;
 import java.util.Set;
 
 @Getter
@@ -25,4 +26,17 @@ public class Compilation {
             inverseJoinColumns = @JoinColumn(name = "event_id")
     )
     Set<Event> events;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Compilation that)) return false;
+        return Objects.equals(id, that.id) && Objects.equals(title, that.title)
+                && Objects.equals(pinned, that.pinned) && Objects.equals(events, that.events);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, title, pinned, events);
+    }
 }

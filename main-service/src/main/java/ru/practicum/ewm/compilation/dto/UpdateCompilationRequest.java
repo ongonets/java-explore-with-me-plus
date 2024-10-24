@@ -1,6 +1,7 @@
 package ru.practicum.ewm.compilation.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -14,9 +15,9 @@ import java.util.Set;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UpdateCompilationRequest {
 
-    Optional<Set<Long>> events;
+    Set<@Positive Long> events;
 
-    Optional<Boolean> pinned;
+    Boolean pinned;
 
     Optional<@NotBlank @Size(min = 1, max = 50) String> title;
 }

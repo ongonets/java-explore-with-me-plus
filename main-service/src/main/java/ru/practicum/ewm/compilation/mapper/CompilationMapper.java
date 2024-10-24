@@ -23,7 +23,6 @@ public interface CompilationMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(source = "events", target = "events")
     @Mapping(source = "request.title", target = "title", qualifiedByName = "unwrap")
-    @Mapping(source = "request.pinned", target = "pinned", qualifiedByName = "unwrap")
     Compilation update(@MappingTarget Compilation compilation, UpdateCompilationRequest request, Set<Event> events);
 
     @Named(value = "unwrap")
