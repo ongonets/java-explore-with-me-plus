@@ -164,7 +164,7 @@ public class RequestServiceImpl implements RequestService {
     private void isRequestLimitReached(Event event, List<Request> requests) {
         long count = requests.stream().filter(request -> request.getStatus().equals(RequestStatus.CONFIRMED)).count();
         long limit = event.getParticipantLimit();
-        if (limit != 0 && count > limit) {
+        if (limit != 0 && count + 1 > limit) {
             log.error("Event ID = {} request limit is reached", event.getId());
             throw new ConflictDataException(
                     String.format("Event ID = %d request limit is reached", event.getId()));
