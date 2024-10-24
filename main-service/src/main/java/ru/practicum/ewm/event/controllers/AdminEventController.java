@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.event.dto.*;
 import ru.practicum.ewm.event.model.EventState;
@@ -17,6 +18,7 @@ import java.util.List;
 @RequestMapping(path = "/admin")
 @RequiredArgsConstructor
 @Slf4j
+@Validated
 public class AdminEventController {
 
     private final EventService eventService;

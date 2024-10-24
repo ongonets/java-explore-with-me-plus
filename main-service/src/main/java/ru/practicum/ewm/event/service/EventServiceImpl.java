@@ -59,7 +59,7 @@ public class EventServiceImpl implements EventService {
                 .map(event ->  eventMapper.mapToShortDto(event,
                         stat.get(event.getId()),
                         countConfirmedRequest.get(event.getId())))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override

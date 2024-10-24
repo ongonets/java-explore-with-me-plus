@@ -186,7 +186,7 @@ public class RequestServiceImpl implements RequestService {
         if (limit == 0) {
             return;
         }
-        long countUpdateRequest = requests.size();
+        long countUpdateRequest = updateRequest.getRequestIds().size();
         long countConfirmedRequests = requests.stream()
                 .filter(request -> request.getStatus().equals(RequestStatus.CONFIRMED)).count();
         if (countConfirmedRequests + countUpdateRequest > limit) {

@@ -3,6 +3,7 @@ package ru.practicum.ewm.request.controller;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.event.dto.ParamEventDto;
 import ru.practicum.ewm.request.dto.EventRequestStatusUpdateRequest;
@@ -16,6 +17,7 @@ import java.util.List;
 @RequestMapping(path = "/users")
 @RequiredArgsConstructor
 @Slf4j
+@Validated
 public class PrivateRequestController {
 
     private final RequestService requestService;
