@@ -31,7 +31,10 @@ public class CompilationServiceImpl implements CompilationService {
     @Override
     @Transactional
     public CompilationDto saveCompilation(NewCompilationDto request) {
-        List<Event> events = eventRepository.findAllById(request.getEvents());
+        List<Event> events = new ArrayList<>();
+        if (request.getEvents() != null) {
+            events = eventRepository.findAllById(request.getEvents());
+        }
         Compilation compilation = compilationMapper.mapToCompilation(request, events);
         compilation = compilationRepository.save(compilation);
         log.info("Compilation with ID = {} created", compilation.getId());
@@ -69,13 +72,13 @@ public class CompilationServiceImpl implements CompilationService {
     @Transactional(readOnly = true)
     public List<CompilationDto> getCompilations(GetCompilationsParams params) {
         Pageable pageable = PageRequest.of(params.getFrom() / params.getSize(), params.getSize());
-        if (!params.isPinned()) {
+        if (params.getPinned() == null) {
             return compilationRepository.findAll(pageable)
                     .stream()
                     .map(compilationMapper::mapToCompilationDto)
                     .toList();
         } else {
-            return compilationRepository.getByPinnedOrderByPinnedAsc(true, pageable)
+            return compilationRepository.getByPinnedOrderByPinnedAsc(params.getPinned(), pageable)
                     .stream()
                     .map(compilationMapper::mapToCompilationDto)
                     .toList();

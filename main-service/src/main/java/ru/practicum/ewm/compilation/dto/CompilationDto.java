@@ -11,18 +11,11 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
-
 public class CompilationDto {
-
     @NotNull
     Long id;
-
     Boolean pinned;
-
     @NotNull
     String title;
-
     List<EventShortDto> events;
-
 }

@@ -11,5 +11,5 @@ import lombok.experimental.FieldDefaults;
 public class GetCompilationsParams {
     int size;
     int from;
-    boolean pinned;
+    Boolean pinned;
 }
