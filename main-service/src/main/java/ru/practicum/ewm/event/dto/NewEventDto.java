@@ -49,7 +49,7 @@ public class NewEventDto {
     long participantLimit;
 
     @NotNull
-    boolean requestModeration;
+    boolean requestModeration = true;
 
     @Size(min = 3, max = 120)
     @NotBlank
