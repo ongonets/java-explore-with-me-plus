@@ -16,8 +16,8 @@ import ru.practicum.ewm.errorHandler.exception.NotFoundException;
 import ru.practicum.ewm.event.model.Event;
 import ru.practicum.ewm.event.repository.EventRepository;
 
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -33,40 +33,33 @@ public class CompilationServiceImpl implements CompilationService {
         List<Event> events = eventRepository.findAllById(request.getEvents());
         Compilation compilation = compilationMapper.mapToCompilation(request, events);
         compilation = compilationRepository.save(compilation);
-        log.trace("Compilation with ID = {} created", compilation.getId());
+        log.info("Compilation with ID = {} created", compilation.getId());
         return compilationMapper.mapToCompilationDto(compilation);
     }
 
     @Override
     @Transactional
     public void deleteCompilation(Long compId) {
-        compilationRepository.deleteById(compId);
+        Compilation compilation = findCompilation(compId);
+        compilationRepository.delete(compilation);
+        log.info("Compilation with ID = {} deleted", compId);
     }
 
     @Override
     @Transactional
-    public CompilationDto updateCompilation(Long compId, UpdateCompilationRequest updateCompilationRequest) {
-        Compilation old = compilationRepository.findById(compId).orElseThrow(
-                () -> new NotFoundException("Compilation not found"));
-        List<Long> eventsIds = updateCompilationRequest.getEvents();
-        if (eventsIds != null) {
-            var events = eventRepository.findAllById(updateCompilationRequest.getEvents());
-            old.setEvents(new HashSet<>(events));
-        }
-        if (updateCompilationRequest.getPinned() != null)
-            old.setPinned(updateCompilationRequest.getPinned());
-        if (updateCompilationRequest.getTitle() != null)
-            old.setTitle(updateCompilationRequest.getTitle());
-
-        var updated = compilationRepository.save(old);
+    public CompilationDto updateCompilation(Long compId, UpdateCompilationRequest request) {
+        Compilation oldEvent = findCompilation(compId);
+        Set<Event> events = checkIfEventsPresent(request.getEvents());
+        Compilation updated = compilationMapper.update(oldEvent,request, events);
+        updated = compilationRepository.save(updated);
+        log.info("Compilation with ID = {} updated", compId);
         return compilationMapper.mapToCompilationDto(updated);
     }
 
     @Override
     @Transactional(readOnly = true)
     public CompilationDto getCompilation(Long compId) {
-        Compilation compilation = compilationRepository.findById(compId).orElseThrow(
-                () -> new NotFoundException("Compilation not found"));
+        Compilation compilation = findCompilation(compId);
         return compilationMapper.mapToCompilationDto(compilation);
     }
 
@@ -85,5 +78,27 @@ public class CompilationServiceImpl implements CompilationService {
                     .map(compilationMapper::mapToCompilationDto)
                     .toList();
         }
+    }
+
+    private Compilation findCompilation(long compId) {
+        return compilationRepository.findById(compId).orElseThrow(() -> {
+            log.error("Not found compilation with ID = {}", compId);
+            return new NotFoundException("Not found compilation with ID = " + compId);
+        });
+    }
+
+    private Set<Event> checkIfEventsPresent(Optional<Set<Long>> eventIds) {
+        if (eventIds != null) {
+            return getEvents(eventIds.get());
+        } else {
+            return Collections.emptySet();
+        }
+    }
+
+    private Set<Event> getEvents(Set<Long> ids) {
+        return ids.stream()
+                .map(id -> eventRepository.findById(id)
+                        .orElseThrow(() -> new NotFoundException("Not found event with ID = " + id)))
+                .collect(Collectors.toSet());
     }
 }
