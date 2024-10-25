@@ -36,7 +36,6 @@ import java.util.stream.Collectors;
 @Slf4j
 @Transactional(readOnly = true)
 public class EventServiceImpl implements EventService {
-
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
@@ -101,6 +100,14 @@ public class EventServiceImpl implements EventService {
     @Override
     public Collection<EventShortDto> findBy(AdminSearchEventDto adminSearchEventDto) {
         return null;
+    }
+
+    @Override
+    public EventFullDto findPublicEventById(long id) {
+        Event event = getEvent(id);
+        Map<Long, Long> countConfirmedRequest = getCountConfirmedRequest(List.of(event));
+        Map<Long, Long> stat = getStat(List.of(event));
+        return eventMapper.mapToFullDto(event, stat.get(event.getId()), countConfirmedRequest.get(event.getId()));
     }
 
     @Override
