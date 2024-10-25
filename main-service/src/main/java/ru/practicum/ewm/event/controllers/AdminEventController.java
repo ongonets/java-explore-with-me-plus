@@ -24,18 +24,16 @@ public class AdminEventController {
     private final EventService eventService;
 
     @GetMapping("/events")
-    public Collection<EventShortDto> findAllEvents(@RequestParam(required = false) List<@Positive Long> users,
+    public Collection<EventFullDto> findAllEvents(@RequestParam(required = false) List<@Positive Long> users,
                                                    @RequestParam(required = false) List<EventState> states,
                                                    @RequestParam(required = false) List<Long> category,
                                                    @RequestParam(required = false) LocalDateTime rangeStart,
                                                    @RequestParam(required = false) LocalDateTime rangeEnd,
-                                                   @RequestParam(defaultValue = "0") long from,
-                                                   @RequestParam(defaultValue = "10")long size
-                                                   ) {
-        AdminSearchEventDto adminSearchEventDto =
-                new AdminSearchEventDto(users, states,category,rangeStart,rangeEnd,from,size);
-        log.info("Request to find events {}", adminSearchEventDto);
-        return eventService.findBy(adminSearchEventDto);
+                                                   @RequestParam(defaultValue = "0") int from,
+                                                   @RequestParam(defaultValue = "10") int size) {
+        AdminSearchEventDto params = new AdminSearchEventDto(users, states, category, rangeStart, rangeEnd, from, size);
+        log.info("Request to find events {}", params);
+        return eventService.findBy(params);
     }
 
     @PatchMapping("/events/{eventId}")

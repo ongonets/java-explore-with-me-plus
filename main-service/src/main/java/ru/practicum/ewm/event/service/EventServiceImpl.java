@@ -98,8 +98,22 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public Collection<EventShortDto> findBy(AdminSearchEventDto adminSearchEventDto) {
-        return null;
+    public Collection<EventFullDto> findBy(AdminSearchEventDto params) {
+        Page<Event> page = eventRepository.findAllAdmin(params.getUsers(), params.getStates(), params.getCategories(),
+                params.getRangeStart(), params.getRangeEnd(),
+                PageRequest.of(params.getFrom(), params.getSize()));
+        List<Event> events = page.getContent();
+        Map<Long, Long> countConfirmedRequest = getCountConfirmedRequest(events);
+        Map<Long, Long> stat = getStat(events);
+
+        return events.stream()
+                .sorted(Comparator.comparing(Event::getPublishedOn))
+                .map(event -> {
+                    Long confirmedCount = countConfirmedRequest.get(event.getId());
+                    Long statValue = stat.get(event.getId());
+                    return eventMapper.mapToFullDto(event, statValue, confirmedCount);
+                })
+                .toList();
     }
 
     @Override

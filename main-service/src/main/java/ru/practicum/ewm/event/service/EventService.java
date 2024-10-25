@@ -9,7 +9,7 @@ public interface EventService {
 
     EventFullDto findBy(ParamEventDto paramEventDto, String ip);
 
-    Collection<EventShortDto> findBy(AdminSearchEventDto adminSearchEventDto);
+    Collection<EventFullDto> findBy(AdminSearchEventDto adminSearchEventDto);
 
     EventFullDto findEventByIdPublic(long id);
 

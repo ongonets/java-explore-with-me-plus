@@ -7,7 +7,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import ru.practicum.ewm.event.model.Event;
 import ru.practicum.ewm.event.model.EventState;
-import ru.practicum.ewm.request.model.RequestStatus;
 import ru.practicum.ewm.user.model.User;
 
 import java.time.LocalDateTime;
@@ -35,6 +34,19 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             @Param("rangeStart") LocalDateTime rangeStart,
             @Param("rangeEnd") LocalDateTime rangeEnd,
             @Param("state") EventState state,
+            Pageable pageable);
+
+    @Query("SELECT e FROM Event e " +
+            "WHERE (:users IS NULL OR e.initiator.id IN :users) " +
+            "AND (:categories IS NULL OR e.category.id IN :categories) " +
+            "AND (:states IS NULL OR e.state IN :states) " +
+            "AND e.eventDate BETWEEN :rangeStart AND :rangeEnd")
+    Page<Event> findAllAdmin(
+            @Param("users") List<Long> users,
+            @Param("states") List<EventState> states,
+            @Param("categories") List<Long> categories,
+            @Param("rangeStart") LocalDateTime rangeStart,
+            @Param("rangeEnd") LocalDateTime rangeEnd,
             Pageable pageable);
 
     boolean existsByCategoryId(long catId);

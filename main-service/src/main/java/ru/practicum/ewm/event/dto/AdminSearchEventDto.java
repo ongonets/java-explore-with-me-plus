@@ -20,6 +20,6 @@ public class AdminSearchEventDto {
     List<Long> categories;
     LocalDateTime rangeStart;
     LocalDateTime rangeEnd;
-    long from;
-    long size;
+    int from;
+    int size;
 }
