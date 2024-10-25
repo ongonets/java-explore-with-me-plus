@@ -90,6 +90,7 @@ public class EventServiceImpl implements EventService {
     @Transactional
     public EventFullDto update(ParamEventDto paramEventDto, UpdateEventUserRequest updateEvent) {
         Event event = getUserEvent(paramEventDto);
+        checkPublished(event);
         updateEventsStatus(event, updateEvent);
         Category category = checkCategory(updateEvent.getCategory());
          eventMapper.update(event, updateEvent, category);
