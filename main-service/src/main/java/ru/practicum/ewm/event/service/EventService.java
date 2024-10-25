@@ -11,7 +11,9 @@ public interface EventService {
 
     Collection<EventShortDto> findBy(AdminSearchEventDto adminSearchEventDto);
 
-    EventFullDto findPublicEventById(long id);
+    EventFullDto findEventByIdPublic(long id);
+
+    Collection<EventShortDto> findEventsPublic(PublicSearchEventParams params);
 
     EventFullDto create(long userId, NewEventDto newEvent);
 

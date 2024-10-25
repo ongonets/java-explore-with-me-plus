@@ -1,5 +1,6 @@
 package ru.practicum.ewm.event.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -18,6 +19,7 @@ public class EventShortDto {
     String annotation;
     CategoryDto category;
     long confirmedRequests;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     LocalDateTime eventDate;
     long id;
     UserShortDto initiator;

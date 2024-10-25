@@ -2,6 +2,8 @@ package ru.practicum.ewm.event.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.StatClient;
@@ -17,6 +19,7 @@ import ru.practicum.ewm.event.mapper.EventMapper;
 import ru.practicum.ewm.event.model.ActionState;
 import ru.practicum.ewm.event.model.Event;
 import ru.practicum.ewm.event.model.EventState;
+import ru.practicum.ewm.event.model.Sort;
 import ru.practicum.ewm.event.repository.EventRepository;
 import ru.practicum.ewm.request.dto.RequestCountDto;
 import ru.practicum.ewm.request.repository.RequestRepository;
@@ -25,10 +28,7 @@ import ru.practicum.ewm.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -103,11 +103,47 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public EventFullDto findPublicEventById(long id) {
+    public EventFullDto findEventByIdPublic(long id) {
         Event event = getEvent(id);
         Map<Long, Long> countConfirmedRequest = getCountConfirmedRequest(List.of(event));
         Map<Long, Long> stat = getStat(List.of(event));
         return eventMapper.mapToFullDto(event, stat.get(event.getId()), countConfirmedRequest.get(event.getId()));
+    }
+
+    @Override
+    public Collection<EventShortDto> findEventsPublic(PublicSearchEventParams params) {
+        Page<Event> page = eventRepository.findAllPublic(params.getText(), params.getCategories(), params.getPaid(),
+                    params.getRangeStart(), params.getRangeEnd(), EventState.PUBLISHED,
+                    PageRequest.of(params.getFrom(), params.getSize()));
+        List<Event> events = page.getContent();
+        Map<Long, Long> countConfirmedRequest = getCountConfirmedRequest(events);
+        Map<Long, Long> stat = getStat(events);
+
+        if (params.isOnlyAvailable()) {
+            events = events.stream()
+                    .filter(event -> {
+                        Long confirmedRequests = countConfirmedRequest.get(event.getId());
+                        return confirmedRequests != null && confirmedRequests < event.getParticipantLimit();
+                    })
+                    .toList();
+        }
+
+        List<EventShortDto> eventShortDtoList = events.stream()
+                .sorted(Comparator.comparing(Event::getPublishedOn))
+                .map(event -> {
+                    Long confirmedCount = countConfirmedRequest.get(event.getId());
+                    Long statValue = stat.get(event.getId());
+                    return eventMapper.mapToShortDto(event, statValue, confirmedCount);
+                })
+                .collect(Collectors.toList());
+
+        if (params.getSort().equals(Sort.EVENT_DATE)) {
+            eventShortDtoList.sort(Comparator.comparing(EventShortDto::getEventDate));
+        } else {
+            eventShortDtoList.sort(Comparator.comparing(EventShortDto::getViews, Comparator.reverseOrder()));
+        }
+
+        return eventShortDtoList;
     }
 
     @Override
@@ -163,7 +199,7 @@ public class EventServiceImpl implements EventService {
         User user = getUser(userId);
         Event event = getEvent(eventId);
         if (event.getInitiator() != user) {
-            log.error("Not found event with ID = {}", eventId);
+            log.error("Event with ID = {} is not found", eventId);
             throw new NotFoundException(
                     String.format("Not found event with ID = %d", eventId));
         }
