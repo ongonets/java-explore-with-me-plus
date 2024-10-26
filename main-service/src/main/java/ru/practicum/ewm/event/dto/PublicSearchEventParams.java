@@ -1,12 +1,10 @@
 package ru.practicum.ewm.event.dto;
 
-import jakarta.validation.constraints.Positive;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
-import org.springframework.web.bind.annotation.RequestParam;
-import ru.practicum.ewm.event.model.Sort;
+import ru.practicum.ewm.event.model.Sorting;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -21,7 +19,7 @@ public class PublicSearchEventParams {
     LocalDateTime rangeStart;
     LocalDateTime rangeEnd;
     boolean onlyAvailable;
-    Sort sort;
+    Sorting sort;
     int from;
     int size;
 }

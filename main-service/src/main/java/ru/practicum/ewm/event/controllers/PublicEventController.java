@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.event.dto.EventFullDto;
 import ru.practicum.ewm.event.dto.EventShortDto;
 import ru.practicum.ewm.event.dto.PublicSearchEventParams;
-import ru.practicum.ewm.event.model.Sort;
+import ru.practicum.ewm.event.model.Sorting;
 import ru.practicum.ewm.event.service.EventService;
 
 import java.time.LocalDateTime;
@@ -30,7 +30,7 @@ public class PublicEventController {
                                                 @RequestParam LocalDateTime rangeStart,
                                                 @RequestParam LocalDateTime rangeEnd,
                                                 @RequestParam boolean onlyAvailable,
-                                                @RequestParam Sort sort,
+                                                @RequestParam Sorting sort,
                                                 @RequestParam(defaultValue = "0") int from,
                                                 @RequestParam(defaultValue = "10") int size) {
         PublicSearchEventParams params = new PublicSearchEventParams(text, categories, paid, rangeStart, rangeEnd,

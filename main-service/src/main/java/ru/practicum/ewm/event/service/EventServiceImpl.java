@@ -22,6 +22,7 @@ import ru.practicum.ewm.event.mapper.EventMapper;
 import ru.practicum.ewm.event.model.*;
 import ru.practicum.ewm.event.repository.EventRepository;
 import ru.practicum.ewm.request.dto.RequestCountDto;
+import org.springframework.data.domain.Sort;
 import ru.practicum.ewm.request.repository.RequestRepository;
 import ru.practicum.ewm.user.model.User;
 import ru.practicum.ewm.user.repository.UserRepository;
@@ -119,6 +120,10 @@ public class EventServiceImpl implements EventService {
     @Override
     public EventFullDto findEventByIdPublic(long id) {
         Event event = getEvent(id);
+        if (event.getState() != EventState.PUBLISHED) {
+            log.error("Event with ID = {} is not published", id);
+            throw new NotFoundException("Event not found");
+        }
         Map<Long, Long> countConfirmedRequest = getCountConfirmedRequest(List.of(event));
         Map<Long, Long> stat = getStat(List.of(event));
         return eventMapper.mapToFullDto(event, stat.get(event.getId()), countConfirmedRequest.get(event.getId()));
@@ -126,9 +131,10 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public Collection<EventShortDto> findEventsPublic(PublicSearchEventParams params) {
-        Page<Event> page = eventRepository.findAllPublic(params.getText(), params.getCategories(), params.getPaid(),
-                params.getRangeStart(), params.getRangeEnd(), EventState.PUBLISHED,
-                PageRequest.of(params.getFrom(), params.getSize()));
+        Predicate query = buildQueryPublic(params);
+        Sort sort = getSortingValue(params.getSort());
+        Pageable pageable = PageRequest.of(params.getFrom() / params.getSize(), params.getSize(), sort);
+        Page<Event> page = eventRepository.findAll(query, pageable);
         List<Event> events = page.getContent();
         Map<Long, Long> countConfirmedRequest = getCountConfirmedRequest(events);
         Map<Long, Long> stat = getStat(events);
@@ -141,22 +147,13 @@ public class EventServiceImpl implements EventService {
                     })
                     .toList();
         }
-        List<EventShortDto> eventShortDtoList = events.stream()
-                .sorted(Comparator.comparing(Event::getPublishedOn))
+        return  events.stream()
                 .map(event -> {
                     Long confirmedCount = countConfirmedRequest.get(event.getId());
                     Long statValue = stat.get(event.getId());
                     return eventMapper.mapToShortDto(event, statValue, confirmedCount);
                 })
-                .collect(Collectors.toList());
-
-        if (params.getSort().equals(Sort.EVENT_DATE)) {
-            eventShortDtoList.sort(Comparator.comparing(EventShortDto::getEventDate));
-        } else {
-            eventShortDtoList.sort(Comparator.comparing(EventShortDto::getViews, Comparator.reverseOrder()));
-        }
-
-        return eventShortDtoList;
+                .toList();
     }
 
     @Override
@@ -277,7 +274,6 @@ public class EventServiceImpl implements EventService {
         }
     }
 
-
     private void updateEventsStatus(Event event, UpdateEventUserRequest updateEvent) {
         ActionState actionState;
         if (updateEvent.getStateAction() != null) {
@@ -315,4 +311,35 @@ public class EventServiceImpl implements EventService {
         }
 
         return searchParams;
-    }}
+    }
+
+    private Predicate buildQueryPublic(PublicSearchEventParams params) {
+        BooleanBuilder searchParams = new BooleanBuilder();
+
+        if (params.getText() != null && !params.getText().isBlank()) {
+            searchParams.and(QEvent.event.description.contains(params.getText())
+                    .or(QEvent.event.annotation.contains(params.getText())));
+        }
+        if (params.getCategories() != null && !params.getCategories().isEmpty()) {
+            searchParams.and(QEvent.event.category.id.in(params.getCategories()));
+        }
+        if (params.getPaid() != null) {
+            searchParams.and(QEvent.event.paid.eq(params.getPaid()));
+        }
+        if (params.getRangeStart() != null && params.getRangeEnd() != null) {
+            searchParams.and(QEvent.event.eventDate.between(params.getRangeStart(), params.getRangeEnd()));
+        }
+        return searchParams;
+    }
+
+    private Sort getSortingValue(Sorting sortParam) {
+        return switch (sortParam) {
+            case EVENT_DATE -> Sort.by(Sort.Direction.DESC, "eventDate");
+            case VIEWS -> Sort.by(Sort.Direction.DESC, "views");
+            case null -> Sort.unsorted();
+        };
+
+    }
+
+}
+
