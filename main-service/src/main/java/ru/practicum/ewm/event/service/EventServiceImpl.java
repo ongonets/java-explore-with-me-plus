@@ -53,9 +53,9 @@ public class EventServiceImpl implements EventService {
                 .findByInitiator(user, privateSearchEventDto.getSize(), privateSearchEventDto.getFrom());
         Map<Long, Long> countConfirmedRequest = getCountConfirmedRequest(events);
         Map<Long, Long> stat = getStat(events);
-        addHit("/events",privateSearchEventDto.getIp());
+        addHit("/events", privateSearchEventDto.getIp());
         return events.stream()
-                .map(event ->  eventMapper.mapToShortDto(event,
+                .map(event -> eventMapper.mapToShortDto(event,
                         stat.get(event.getId()),
                         countConfirmedRequest.get(event.getId())))
                 .toList();
@@ -91,7 +91,7 @@ public class EventServiceImpl implements EventService {
         Event event = getUserEvent(paramEventDto);
         updateEventsStatus(event, updateEvent);
         Category category = checkCategory(updateEvent.getCategory());
-         eventMapper.update(event, updateEvent, category);
+        eventMapper.update(event, updateEvent, category);
         eventRepository.save(event);
         Map<Long, Long> countConfirmedRequest = getCountConfirmedRequest(List.of(event));
         return eventMapper.mapToFullDto(event, null, countConfirmedRequest.get(event.getId()));
@@ -99,10 +99,8 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public Collection<EventFullDto> findBy(AdminSearchEventDto params) {
-        Page<Event> page = eventRepository.findAllAdmin(params.getUsers(), params.getStates(), params.getCategories(),
-                params.getRangeStart(), params.getRangeEnd(),
-                PageRequest.of(params.getFrom(), params.getSize()));
-        List<Event> events = page.getContent();
+        List<Event> events = eventRepository.findAllAdmin(params.getUsers(), params.getStates(), params.getCategories(),
+                params.getRangeStart(), params.getRangeEnd(), params.getFrom(), params.getSize());
         Map<Long, Long> countConfirmedRequest = getCountConfirmedRequest(events);
         Map<Long, Long> stat = getStat(events);
 
@@ -127,8 +125,8 @@ public class EventServiceImpl implements EventService {
     @Override
     public Collection<EventShortDto> findEventsPublic(PublicSearchEventParams params) {
         Page<Event> page = eventRepository.findAllPublic(params.getText(), params.getCategories(), params.getPaid(),
-                    params.getRangeStart(), params.getRangeEnd(), EventState.PUBLISHED,
-                    PageRequest.of(params.getFrom(), params.getSize()));
+                params.getRangeStart(), params.getRangeEnd(), EventState.PUBLISHED,
+                PageRequest.of(params.getFrom(), params.getSize()));
         List<Event> events = page.getContent();
         Map<Long, Long> countConfirmedRequest = getCountConfirmedRequest(events);
         Map<Long, Long> stat = getStat(events);
@@ -141,7 +139,6 @@ public class EventServiceImpl implements EventService {
                     })
                     .toList();
         }
-
         List<EventShortDto> eventShortDtoList = events.stream()
                 .sorted(Comparator.comparing(Event::getPublishedOn))
                 .map(event -> {
@@ -272,7 +269,7 @@ public class EventServiceImpl implements EventService {
 
     private void checkPublished(Event event) {
         if (!event.getState().equals(EventState.PUBLISHED)) {
-            log.error("Event ID = {} not in the status for review", event.getId());
+            log.error("Event ID = {} not in the correct status for review", event.getId());
             throw new ConflictDataException(
                     String.format("Event ID = %d not in the status for review", event.getId()));
         }

@@ -4,6 +4,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.data.repository.query.Param;
 import ru.practicum.ewm.event.model.Event;
 import ru.practicum.ewm.event.model.EventState;
@@ -12,12 +13,12 @@ import ru.practicum.ewm.user.model.User;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public interface EventRepository extends JpaRepository<Event, Long> {
-
+public interface EventRepository extends JpaRepository<Event, Long>, QuerydslPredicateExecutor<Event> {
 
     @Query("Select e from Event e where e.initiator = :user order by e.id limit :size offset :from")
-    List<Event> findByInitiator(@Param("user") User user, @Param("size") Long size, @Param("from") Long from);
-
+    List<Event> findByInitiator(@Param("user") User user,
+                                @Param("size") Long size,
+                                @Param("from") Long from);
 
     @Query("SELECT e FROM Event e " +
             "WHERE (:text IS NULL OR :text = '' OR " +
@@ -40,14 +41,16 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             "WHERE (:users IS NULL OR e.initiator.id IN :users) " +
             "AND (:categories IS NULL OR e.category.id IN :categories) " +
             "AND (:states IS NULL OR e.state IN :states) " +
-            "AND e.eventDate BETWEEN :rangeStart AND :rangeEnd")
-    Page<Event> findAllAdmin(
+            "AND e.eventDate BETWEEN :rangeStart AND :rangeEnd " +
+            "ORDER BY e.id LIMIT :size OFFSET :from")
+    List<Event> findAllAdmin(
             @Param("users") List<Long> users,
             @Param("states") List<EventState> states,
             @Param("categories") List<Long> categories,
             @Param("rangeStart") LocalDateTime rangeStart,
             @Param("rangeEnd") LocalDateTime rangeEnd,
-            Pageable pageable);
+            @Param("from") int from,
+            @Param("size") int size);
 
     boolean existsByCategoryId(long catId);
 
