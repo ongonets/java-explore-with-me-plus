@@ -37,21 +37,6 @@ public interface EventRepository extends JpaRepository<Event, Long>, QuerydslPre
             @Param("state") EventState state,
             Pageable pageable);
 
-    @Query("SELECT e FROM Event e " +
-            "WHERE (:users IS NULL OR e.initiator.id IN :users) " +
-            "AND (:categories IS NULL OR e.category.id IN :categories) " +
-            "AND (:states IS NULL OR e.state IN :states) " +
-            "AND e.eventDate BETWEEN :rangeStart AND :rangeEnd " +
-            "ORDER BY e.id LIMIT :size OFFSET :from")
-    List<Event> findAllAdmin(
-            @Param("users") List<Long> users,
-            @Param("states") List<EventState> states,
-            @Param("categories") List<Long> categories,
-            @Param("rangeStart") LocalDateTime rangeStart,
-            @Param("rangeEnd") LocalDateTime rangeEnd,
-            @Param("from") int from,
-            @Param("size") int size);
-
     boolean existsByCategoryId(long catId);
 
 }

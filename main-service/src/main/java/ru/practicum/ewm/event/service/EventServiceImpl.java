@@ -1,9 +1,12 @@
 package ru.practicum.ewm.event.service;
 
+import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.StatClient;
@@ -16,10 +19,7 @@ import ru.practicum.ewm.errorHandler.exception.ConflictDataException;
 import ru.practicum.ewm.errorHandler.exception.NotFoundException;
 import ru.practicum.ewm.event.dto.*;
 import ru.practicum.ewm.event.mapper.EventMapper;
-import ru.practicum.ewm.event.model.ActionState;
-import ru.practicum.ewm.event.model.Event;
-import ru.practicum.ewm.event.model.EventState;
-import ru.practicum.ewm.event.model.Sort;
+import ru.practicum.ewm.event.model.*;
 import ru.practicum.ewm.event.repository.EventRepository;
 import ru.practicum.ewm.request.dto.RequestCountDto;
 import ru.practicum.ewm.request.repository.RequestRepository;
@@ -98,14 +98,15 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public Collection<EventFullDto> findBy(AdminSearchEventDto params) {
-        List<Event> events = eventRepository.findAllAdmin(params.getUsers(), params.getStates(), params.getCategories(),
-                params.getRangeStart(), params.getRangeEnd(), params.getFrom(), params.getSize());
+    public Collection<EventFullDto> findEventsAdmin(AdminSearchEventDto params) {
+        Predicate query = buildQueryAdmin(params);
+        Pageable pageable = PageRequest.of(params.getFrom() / params.getSize(), params.getSize());
+        Page<Event> page = eventRepository.findAll(query, pageable);
+        List<Event> events = page.getContent();
         Map<Long, Long> countConfirmedRequest = getCountConfirmedRequest(events);
         Map<Long, Long> stat = getStat(events);
 
         return events.stream()
-                .sorted(Comparator.comparing(Event::getPublishedOn))
                 .map(event -> {
                     Long confirmedCount = countConfirmedRequest.get(event.getId());
                     Long statValue = stat.get(event.getId());
@@ -113,6 +114,7 @@ public class EventServiceImpl implements EventService {
                 })
                 .toList();
     }
+
 
     @Override
     public EventFullDto findEventByIdPublic(long id) {
@@ -295,4 +297,22 @@ public class EventServiceImpl implements EventService {
             }
         }
     }
-}
+
+    private Predicate buildQueryAdmin(AdminSearchEventDto params) {
+        BooleanBuilder searchParams = new BooleanBuilder();
+
+        if (params.getUsers() != null && !params.getUsers().isEmpty()) {
+            searchParams.and(QEvent.event.initiator.id.in(params.getUsers()));
+        }
+        if (params.getStates() != null && !params.getStates().isEmpty()) {
+            searchParams.and(QEvent.event.state.in(params.getStates()));
+        }
+        if (params.getCategories() != null && !params.getCategories().isEmpty()) {
+            searchParams.and(QEvent.event.category.id.in(params.getCategories()));
+        }
+        if (params.getRangeStart() != null && params.getRangeEnd() != null) {
+            searchParams.and(QEvent.event.eventDate.between(params.getRangeStart(), params.getRangeEnd()));
+        }
+
+        return searchParams;
+    }}

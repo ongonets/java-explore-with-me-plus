@@ -33,7 +33,7 @@ public class AdminEventController {
                                                   @RequestParam(defaultValue = "10") int size) {
         AdminSearchEventDto params = new AdminSearchEventDto(users, states, category, rangeStart, rangeEnd, from, size);
         log.info("Request to find events {}", params);
-        return eventService.findBy(params);
+        return eventService.findEventsAdmin(params);
     }
 
     @PatchMapping("/events/{eventId}")
