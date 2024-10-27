@@ -85,6 +85,7 @@ public class EventServiceImpl implements EventService {
     @Transactional
     public EventFullDto update(ParamEventDto paramEventDto, UpdateEventUserRequest updateEvent) {
         Event event = getUserEvent(paramEventDto);
+        checkPublished(event);
         updateEventsStatus(event, updateEvent);
         Category category = checkCategory(updateEvent.getCategory());
         eventMapper.update(event, updateEvent, category);
@@ -98,7 +99,7 @@ public class EventServiceImpl implements EventService {
     public Collection<EventFullDto> findEventsAdmin(AdminSearchEventDto params) {
         Predicate query = buildQueryAdmin(params);
         Pageable pageable = PageRequest.of(params.getFrom() / params.getSize(), params.getSize());
-        List<Event> events= eventRepository.findAll(query, pageable).getContent();
+        List<Event> events = eventRepository.findAll(query, pageable).getContent();
         return mapToFullDto(events);
     }
 
@@ -238,7 +239,7 @@ public class EventServiceImpl implements EventService {
     }
 
     private void checkPublished(Event event) {
-        if (!event.getState().equals(EventState.PUBLISHED)) {
+        if (event.getState().equals(EventState.PUBLISHED)) {
             log.error("Event ID = {} not in the correct status for review", event.getId());
             throw new ConflictDataException(
                     String.format("Event ID = %d not in the status for review", event.getId()));
@@ -320,7 +321,7 @@ public class EventServiceImpl implements EventService {
 
     }
 
-    private List<EventShortDto> mapToShortDto(List<Event> events){
+    private List<EventShortDto> mapToShortDto(List<Event> events) {
         Map<Long, Long> countConfirmedRequest = getCountConfirmedRequest(events);
         Map<Long, Long> stat = getStat(events);
         return  events.stream()
@@ -331,7 +332,8 @@ public class EventServiceImpl implements EventService {
                 })
                 .toList();
     }
-    private List<EventFullDto> mapToFullDto(List<Event> events){
+
+    private List<EventFullDto> mapToFullDto(List<Event> events) {
         Map<Long, Long> countConfirmedRequest = getCountConfirmedRequest(events);
         Map<Long, Long> stat = getStat(events);
         return events.stream()

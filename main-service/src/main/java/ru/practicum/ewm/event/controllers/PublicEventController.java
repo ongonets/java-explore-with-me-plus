@@ -30,7 +30,7 @@ public class PublicEventController {
                                                 @RequestParam(required = false) Boolean paid,
                                                 @RequestParam(required = false) LocalDateTime rangeStart,
                                                 @RequestParam(required = false) LocalDateTime rangeEnd,
-                                                @RequestParam boolean onlyAvailable,
+                                                @RequestParam(required = false) boolean onlyAvailable,
                                                 @RequestParam(required = false) Sorting sort,
                                                 @RequestParam(defaultValue = "0") int from,
                                                 @RequestParam(defaultValue = "10") int size,
