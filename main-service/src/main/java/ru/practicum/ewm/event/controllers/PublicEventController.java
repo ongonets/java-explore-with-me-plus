@@ -1,5 +1,6 @@
 package ru.practicum.ewm.event.controllers;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,16 +33,17 @@ public class PublicEventController {
                                                 @RequestParam boolean onlyAvailable,
                                                 @RequestParam(required = false) Sorting sort,
                                                 @RequestParam(defaultValue = "0") int from,
-                                                @RequestParam(defaultValue = "10") int size) {
+                                                @RequestParam(defaultValue = "10") int size,
+                                                HttpServletRequest request) {
         PublicSearchEventParams params = new PublicSearchEventParams(text, categories, paid, rangeStart, rangeEnd,
-                onlyAvailable, sort, from, size);
+                onlyAvailable, sort, from, size, request.getRemoteAddr());
         log.info("Received public request to find events with params: {}", params);
         return eventService.findEventsPublic(params);
     }
 
     @GetMapping("/{id}")
-    public EventFullDto findEventById(@Positive @PathVariable long id) {
+    public EventFullDto findEventById(@Positive @PathVariable long id, HttpServletRequest request) {
         log.info("Received public request to find event with ID = {}", id);
-        return eventService.findEventByIdPublic(id);
+        return eventService.findEventByIdPublic(id, request.getRemoteAddr());
     }
 }

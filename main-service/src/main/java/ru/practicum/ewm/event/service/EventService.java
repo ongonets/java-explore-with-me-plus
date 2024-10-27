@@ -11,7 +11,7 @@ public interface EventService {
 
     Collection<EventFullDto> findEventsAdmin(AdminSearchEventDto adminSearchEventDto);
 
-    EventFullDto findEventByIdPublic(long id);
+    EventFullDto findEventByIdPublic(long id, String ip);
 
     Collection<EventShortDto> findEventsPublic(PublicSearchEventParams params);
 

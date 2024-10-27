@@ -9,7 +9,7 @@ import ru.practicum.ewm.user.model.User;
 
 import java.util.List;
 
-public interface EventRepository extends JpaRepository<Event, Long>, QuerydslPredicateExecutor<Event> {
+public interface EventRepository extends JpaRepository<Event, Long>, QuerydslPredicateExecutor<Event>{
 
     @Query("Select e from Event e where e.initiator = :user order by e.id limit :size offset :from")
     List<Event> findByInitiator(@Param("user") User user,

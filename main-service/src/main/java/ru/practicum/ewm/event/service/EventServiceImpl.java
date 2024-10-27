@@ -4,9 +4,9 @@ import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.StatClient;
@@ -22,14 +22,16 @@ import ru.practicum.ewm.event.mapper.EventMapper;
 import ru.practicum.ewm.event.model.*;
 import ru.practicum.ewm.event.repository.EventRepository;
 import ru.practicum.ewm.request.dto.RequestCountDto;
-import org.springframework.data.domain.Sort;
 import ru.practicum.ewm.request.repository.RequestRepository;
 import ru.practicum.ewm.user.model.User;
 import ru.practicum.ewm.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -52,14 +54,7 @@ public class EventServiceImpl implements EventService {
         User user = getUser(privateSearchEventDto.getUserId());
         List<Event> events = eventRepository
                 .findByInitiator(user, privateSearchEventDto.getSize(), privateSearchEventDto.getFrom());
-        Map<Long, Long> countConfirmedRequest = getCountConfirmedRequest(events);
-        Map<Long, Long> stat = getStat(events);
-        addHit("/events", privateSearchEventDto.getIp());
-        return events.stream()
-                .map(event -> eventMapper.mapToShortDto(event,
-                        stat.get(event.getId()),
-                        countConfirmedRequest.get(event.getId())))
-                .toList();
+        return mapToShortDto(events);
     }
 
     @Override
@@ -95,30 +90,21 @@ public class EventServiceImpl implements EventService {
         eventMapper.update(event, updateEvent, category);
         eventRepository.save(event);
         Map<Long, Long> countConfirmedRequest = getCountConfirmedRequest(List.of(event));
-        return eventMapper.mapToFullDto(event, null, countConfirmedRequest.get(event.getId()));
+        Map<Long, Long> stat = getStat(List.of(event));
+        return eventMapper.mapToFullDto(event, stat.get(event.getId()), countConfirmedRequest.get(event.getId()));
     }
 
     @Override
     public Collection<EventFullDto> findEventsAdmin(AdminSearchEventDto params) {
         Predicate query = buildQueryAdmin(params);
         Pageable pageable = PageRequest.of(params.getFrom() / params.getSize(), params.getSize());
-        Page<Event> page = eventRepository.findAll(query, pageable);
-        List<Event> events = page.getContent();
-        Map<Long, Long> countConfirmedRequest = getCountConfirmedRequest(events);
-        Map<Long, Long> stat = getStat(events);
-
-        return events.stream()
-                .map(event -> {
-                    Long confirmedCount = countConfirmedRequest.get(event.getId());
-                    Long statValue = stat.get(event.getId());
-                    return eventMapper.mapToFullDto(event, statValue, confirmedCount);
-                })
-                .toList();
+        List<Event> events= eventRepository.findAll(query, pageable).getContent();
+        return mapToFullDto(events);
     }
 
 
     @Override
-    public EventFullDto findEventByIdPublic(long id) {
+    public EventFullDto findEventByIdPublic(long id, String ip) {
         Event event = getEvent(id);
         if (event.getState() != EventState.PUBLISHED) {
             log.error("Event with ID = {} is not published", id);
@@ -126,34 +112,19 @@ public class EventServiceImpl implements EventService {
         }
         Map<Long, Long> countConfirmedRequest = getCountConfirmedRequest(List.of(event));
         Map<Long, Long> stat = getStat(List.of(event));
+        addHit(createEventUri(event), ip);
         return eventMapper.mapToFullDto(event, stat.get(event.getId()), countConfirmedRequest.get(event.getId()));
     }
 
     @Override
     public Collection<EventShortDto> findEventsPublic(PublicSearchEventParams params) {
-        Predicate query = buildQueryPublic(params);
+        Predicate predicate = buildQueryPublic(params);
         Sort sort = getSortingValue(params.getSort());
         Pageable pageable = PageRequest.of(params.getFrom() / params.getSize(), params.getSize(), sort);
-        Page<Event> page = eventRepository.findAll(query, pageable);
-        List<Event> events = page.getContent();
-        Map<Long, Long> countConfirmedRequest = getCountConfirmedRequest(events);
-        Map<Long, Long> stat = getStat(events);
-
-        if (params.isOnlyAvailable()) {
-            events = events.stream()
-                    .filter(event -> {
-                        Long confirmedRequests = countConfirmedRequest.get(event.getId());
-                        return confirmedRequests != null && confirmedRequests < event.getParticipantLimit();
-                    })
-                    .toList();
-        }
-        return  events.stream()
-                .map(event -> {
-                    Long confirmedCount = countConfirmedRequest.get(event.getId());
-                    Long statValue = stat.get(event.getId());
-                    return eventMapper.mapToShortDto(event, statValue, confirmedCount);
-                })
-                .toList();
+        List<Event> events = eventRepository.findAll(predicate, pageable).getContent();
+        List<EventShortDto> eventShortDtoList = mapToShortDto(events);
+        addHit("/events", params.getIp());
+        return eventShortDtoList;
     }
 
     @Override
@@ -225,7 +196,7 @@ public class EventServiceImpl implements EventService {
         List<String> uris = events.stream().map(this::createEventUri).toList();
         String start = events.stream().map(Event::getCreatedOn).sorted().findFirst().get().format(dateTimeFormatter);
         String end = LocalDateTime.now().format(dateTimeFormatter);
-        ParamDto paramDto = new ParamDto(start, end, uris, false);
+        ParamDto paramDto = new ParamDto(start, end, uris, true);
         List<StatDto> statDto = statClient.stat(paramDto);
         return statDto.stream().map(dto -> new StatEventDto(parseUri(dto.getUri()), dto.getHits()))
                 .collect(Collectors.toMap(StatEventDto::getEventId, StatEventDto::getHits));
@@ -306,8 +277,11 @@ public class EventServiceImpl implements EventService {
         if (params.getCategories() != null && !params.getCategories().isEmpty()) {
             searchParams.and(QEvent.event.category.id.in(params.getCategories()));
         }
-        if (params.getRangeStart() != null && params.getRangeEnd() != null) {
-            searchParams.and(QEvent.event.eventDate.between(params.getRangeStart(), params.getRangeEnd()));
+        if (params.getRangeStart() != null) {
+            searchParams.and(QEvent.event.eventDate.after(params.getRangeStart()));
+        }
+        if (params.getRangeEnd() != null) {
+            searchParams.and(QEvent.event.eventDate.before(params.getRangeEnd()));
         }
 
         return searchParams;
@@ -326,9 +300,13 @@ public class EventServiceImpl implements EventService {
         if (params.getPaid() != null) {
             searchParams.and(QEvent.event.paid.eq(params.getPaid()));
         }
-        if (params.getRangeStart() != null && params.getRangeEnd() != null) {
-            searchParams.and(QEvent.event.eventDate.between(params.getRangeStart(), params.getRangeEnd()));
+        if (params.getRangeStart() != null) {
+            searchParams.and(QEvent.event.eventDate.after(params.getRangeStart()));
         }
+        if (params.getRangeEnd() != null) {
+            searchParams.and(QEvent.event.eventDate.before(params.getRangeEnd()));
+        }
+
         return searchParams;
     }
 
@@ -341,5 +319,27 @@ public class EventServiceImpl implements EventService {
 
     }
 
+    private List<EventShortDto> mapToShortDto(List<Event> events){
+        Map<Long, Long> countConfirmedRequest = getCountConfirmedRequest(events);
+        Map<Long, Long> stat = getStat(events);
+        return  events.stream()
+                .map(event -> {
+                    Long confirmedCount = countConfirmedRequest.get(event.getId());
+                    Long statValue = stat.get(event.getId());
+                    return eventMapper.mapToShortDto(event, statValue, confirmedCount);
+                })
+                .toList();
+    }
+    private List<EventFullDto> mapToFullDto(List<Event> events){
+        Map<Long, Long> countConfirmedRequest = getCountConfirmedRequest(events);
+        Map<Long, Long> stat = getStat(events);
+        return events.stream()
+                .map(event -> {
+                    Long confirmedCount = countConfirmedRequest.get(event.getId());
+                    Long statValue = stat.get(event.getId());
+                    return eventMapper.mapToFullDto(event, statValue, confirmedCount);
+                })
+                .toList();
+    }
 }
 
