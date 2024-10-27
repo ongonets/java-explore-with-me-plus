@@ -1,7 +1,12 @@
 package ru.practicum.ewm.event.service;
 
+import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.StatClient;
@@ -14,9 +19,7 @@ import ru.practicum.ewm.errorHandler.exception.ConflictDataException;
 import ru.practicum.ewm.errorHandler.exception.NotFoundException;
 import ru.practicum.ewm.event.dto.*;
 import ru.practicum.ewm.event.mapper.EventMapper;
-import ru.practicum.ewm.event.model.ActionState;
-import ru.practicum.ewm.event.model.Event;
-import ru.practicum.ewm.event.model.EventState;
+import ru.practicum.ewm.event.model.*;
 import ru.practicum.ewm.event.repository.EventRepository;
 import ru.practicum.ewm.request.dto.RequestCountDto;
 import ru.practicum.ewm.request.repository.RequestRepository;
@@ -36,7 +39,6 @@ import java.util.stream.Collectors;
 @Slf4j
 @Transactional(readOnly = true)
 public class EventServiceImpl implements EventService {
-
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
@@ -52,14 +54,7 @@ public class EventServiceImpl implements EventService {
         User user = getUser(privateSearchEventDto.getUserId());
         List<Event> events = eventRepository
                 .findByInitiator(user, privateSearchEventDto.getSize(), privateSearchEventDto.getFrom());
-        Map<Long, Long> countConfirmedRequest = getCountConfirmedRequest(events);
-        Map<Long, Long> stat = getStat(events);
-        addHit("/events",privateSearchEventDto.getIp());
-        return events.stream()
-                .map(event ->  eventMapper.mapToShortDto(event,
-                        stat.get(event.getId()),
-                        countConfirmedRequest.get(event.getId())))
-                .toList();
+        return mapToShortDto(events);
     }
 
     @Override
@@ -93,15 +88,44 @@ public class EventServiceImpl implements EventService {
         checkPublished(event);
         updateEventsStatus(event, updateEvent);
         Category category = checkCategory(updateEvent.getCategory());
-         eventMapper.update(event, updateEvent, category);
+        eventMapper.update(event, updateEvent, category);
         eventRepository.save(event);
         Map<Long, Long> countConfirmedRequest = getCountConfirmedRequest(List.of(event));
-        return eventMapper.mapToFullDto(event, null, countConfirmedRequest.get(event.getId()));
+        Map<Long, Long> stat = getStat(List.of(event));
+        return eventMapper.mapToFullDto(event, stat.get(event.getId()), countConfirmedRequest.get(event.getId()));
     }
 
     @Override
-    public Collection<EventShortDto> findBy(AdminSearchEventDto adminSearchEventDto) {
-        return null;
+    public Collection<EventFullDto> findEventsAdmin(AdminSearchEventDto params) {
+        Predicate query = buildQueryAdmin(params);
+        Pageable pageable = PageRequest.of(params.getFrom() / params.getSize(), params.getSize());
+        List<Event> events = eventRepository.findAll(query, pageable).getContent();
+        return mapToFullDto(events);
+    }
+
+
+    @Override
+    public EventFullDto findEventByIdPublic(long id, String ip) {
+        Event event = getEvent(id);
+        if (event.getState() != EventState.PUBLISHED) {
+            log.error("Event with ID = {} is not published", id);
+            throw new NotFoundException("Event not found");
+        }
+        Map<Long, Long> countConfirmedRequest = getCountConfirmedRequest(List.of(event));
+        Map<Long, Long> stat = getStat(List.of(event));
+        addHit(createEventUri(event), ip);
+        return eventMapper.mapToFullDto(event, stat.get(event.getId()), countConfirmedRequest.get(event.getId()));
+    }
+
+    @Override
+    public Collection<EventShortDto> findEventsPublic(PublicSearchEventParams params) {
+        Predicate predicate = buildQueryPublic(params);
+        Sort sort = getSortingValue(params.getSort());
+        Pageable pageable = PageRequest.of(params.getFrom() / params.getSize(), params.getSize(), sort);
+        List<Event> events = eventRepository.findAll(predicate, pageable).getContent();
+        List<EventShortDto> eventShortDtoList = mapToShortDto(events);
+        addHit("/events", params.getIp());
+        return eventShortDtoList;
     }
 
     @Override
@@ -157,7 +181,7 @@ public class EventServiceImpl implements EventService {
         User user = getUser(userId);
         Event event = getEvent(eventId);
         if (event.getInitiator() != user) {
-            log.error("Not found event with ID = {}", eventId);
+            log.error("Event with ID = {} is not found", eventId);
             throw new NotFoundException(
                     String.format("Not found event with ID = %d", eventId));
         }
@@ -173,7 +197,7 @@ public class EventServiceImpl implements EventService {
         List<String> uris = events.stream().map(this::createEventUri).toList();
         String start = events.stream().map(Event::getCreatedOn).sorted().findFirst().get().format(dateTimeFormatter);
         String end = LocalDateTime.now().format(dateTimeFormatter);
-        ParamDto paramDto = new ParamDto(start, end, uris, false);
+        ParamDto paramDto = new ParamDto(start, end, uris, true);
         List<StatDto> statDto = statClient.stat(paramDto);
         return statDto.stream().map(dto -> new StatEventDto(parseUri(dto.getUri()), dto.getHits()))
                 .collect(Collectors.toMap(StatEventDto::getEventId, StatEventDto::getHits));
@@ -216,7 +240,7 @@ public class EventServiceImpl implements EventService {
 
     private void checkPublished(Event event) {
         if (event.getState().equals(EventState.PUBLISHED)) {
-            log.error("Event ID = {} not in the status for review", event.getId());
+            log.error("Event ID = {} not in the correct status for review", event.getId());
             throw new ConflictDataException(
                     String.format("Event ID = %d not in the status for review", event.getId()));
         }
@@ -242,4 +266,83 @@ public class EventServiceImpl implements EventService {
             }
         }
     }
+
+    private Predicate buildQueryAdmin(AdminSearchEventDto params) {
+        BooleanBuilder searchParams = new BooleanBuilder();
+
+        if (params.getUsers() != null && !params.getUsers().isEmpty()) {
+            searchParams.and(QEvent.event.initiator.id.in(params.getUsers()));
+        }
+        if (params.getStates() != null && !params.getStates().isEmpty()) {
+            searchParams.and(QEvent.event.state.in(params.getStates()));
+        }
+        if (params.getCategories() != null && !params.getCategories().isEmpty()) {
+            searchParams.and(QEvent.event.category.id.in(params.getCategories()));
+        }
+        if (params.getRangeStart() != null) {
+            searchParams.and(QEvent.event.eventDate.after(params.getRangeStart()));
+        }
+        if (params.getRangeEnd() != null) {
+            searchParams.and(QEvent.event.eventDate.before(params.getRangeEnd()));
+        }
+
+        return searchParams;
+    }
+
+    private Predicate buildQueryPublic(PublicSearchEventParams params) {
+        BooleanBuilder searchParams = new BooleanBuilder();
+
+        if (params.getText() != null && !params.getText().isBlank()) {
+            searchParams.and(QEvent.event.description.contains(params.getText())
+                    .or(QEvent.event.annotation.contains(params.getText())));
+        }
+        if (params.getCategories() != null && !params.getCategories().isEmpty()) {
+            searchParams.and(QEvent.event.category.id.in(params.getCategories()));
+        }
+        if (params.getPaid() != null) {
+            searchParams.and(QEvent.event.paid.eq(params.getPaid()));
+        }
+        if (params.getRangeStart() != null) {
+            searchParams.and(QEvent.event.eventDate.after(params.getRangeStart()));
+        }
+        if (params.getRangeEnd() != null) {
+            searchParams.and(QEvent.event.eventDate.before(params.getRangeEnd()));
+        }
+
+        return searchParams;
+    }
+
+    private Sort getSortingValue(Sorting sortParam) {
+        return switch (sortParam) {
+            case EVENT_DATE -> Sort.by(Sort.Direction.DESC, "eventDate");
+            case VIEWS -> Sort.by(Sort.Direction.DESC, "views");
+            case null -> Sort.unsorted();
+        };
+
+    }
+
+    private List<EventShortDto> mapToShortDto(List<Event> events) {
+        Map<Long, Long> countConfirmedRequest = getCountConfirmedRequest(events);
+        Map<Long, Long> stat = getStat(events);
+        return  events.stream()
+                .map(event -> {
+                    Long confirmedCount = countConfirmedRequest.get(event.getId());
+                    Long statValue = stat.get(event.getId());
+                    return eventMapper.mapToShortDto(event, statValue, confirmedCount);
+                })
+                .toList();
+    }
+
+    private List<EventFullDto> mapToFullDto(List<Event> events) {
+        Map<Long, Long> countConfirmedRequest = getCountConfirmedRequest(events);
+        Map<Long, Long> stat = getStat(events);
+        return events.stream()
+                .map(event -> {
+                    Long confirmedCount = countConfirmedRequest.get(event.getId());
+                    Long statValue = stat.get(event.getId());
+                    return eventMapper.mapToFullDto(event, statValue, confirmedCount);
+                })
+                .toList();
+    }
 }
+
