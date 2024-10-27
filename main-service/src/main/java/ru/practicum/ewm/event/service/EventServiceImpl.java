@@ -245,6 +245,7 @@ public class EventServiceImpl implements EventService {
         }
     }
 
+
     private void updateEventsStatus(Event event, UpdateEventUserRequest updateEvent) {
         ActionState actionState;
         if (updateEvent.getStateAction() != null) {

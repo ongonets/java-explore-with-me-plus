@@ -47,7 +47,7 @@ public class RequestServiceImpl implements RequestService {
         Event event = getEvent(eventId);
         validateRequest(user, event);
         Request request = new Request(event, user);
-        if (!event.isRequestModeration()) {
+        if (!event.isRequestModeration() || event.getParticipantLimit() == 0) {
             request.setStatus(RequestStatus.CONFIRMED);
         }
         requestRepository.save(request);
@@ -79,8 +79,8 @@ public class RequestServiceImpl implements RequestService {
         RequestStatus status = updateRequest.getStatus();
         List<Request> updatedRequests = new ArrayList<>();
         switch (status) {
-            case REJECTED -> updatedRequests = canceledRequest(requests, updateRequest);
-            case CONFIRMED -> updatedRequests = confirmedRequest(event, requests, updateRequest);
+            case REJECTED -> updatedRequests = rejectRequest(requests, updateRequest);
+            case CONFIRMED -> updatedRequests = confirmRequest(event, requests, updateRequest);
         }
         requestRepository.saveAll(updatedRequests);
         List<Request> confirmedRequests = updatedRequests.stream()
@@ -164,7 +164,7 @@ public class RequestServiceImpl implements RequestService {
     private void isRequestLimitReached(Event event, List<Request> requests) {
         long count = requests.stream().filter(request -> request.getStatus().equals(RequestStatus.CONFIRMED)).count();
         long limit = event.getParticipantLimit();
-        if (limit != 0 && count > limit) {
+        if (limit != 0 && count + 1 > limit) {
             log.error("Event ID = {} request limit is reached", event.getId());
             throw new ConflictDataException(
                     String.format("Event ID = %d request limit is reached", event.getId()));
@@ -206,22 +206,22 @@ public class RequestServiceImpl implements RequestService {
         }
     }
 
-    private List<Request> canceledRequest(List<Request> requests,
-                                          EventRequestStatusUpdateRequest updateRequest) {
+    private List<Request> rejectRequest(List<Request> requests,
+                                        EventRequestStatusUpdateRequest updateRequest) {
         checkConfirmedRequest(requests, updateRequest);
         return requests.stream()
                 .map(request -> {
                             if (updateRequest.getRequestIds().contains(request.getId())) {
-                                request.setStatus(RequestStatus.CANCELED);
+                                request.setStatus(RequestStatus.REJECTED);
                             }
                             return request;
                         }
                 ).toList();
     }
 
-    private List<Request> confirmedRequest(Event event,
-                                           List<Request> requests,
-                                           EventRequestStatusUpdateRequest updateRequest) {
+    private List<Request> confirmRequest(Event event,
+                                         List<Request> requests,
+                                         EventRequestStatusUpdateRequest updateRequest) {
         checkEventForRequestLimit(event, requests, updateRequest);
         return requests.stream()
                 .map(request -> {
