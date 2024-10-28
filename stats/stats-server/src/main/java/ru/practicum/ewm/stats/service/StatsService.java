@@ -1,4 +1,4 @@
-package ru.practicum.ewm.service;
+package ru.practicum.ewm.stats.service;
 
 import ru.practicum.ewm.dto.HitDto;
 import ru.practicum.ewm.dto.StatDto;

@@ -1,4 +1,4 @@
-package ru.practicum.ewm.model;
+package ru.practicum.ewm.stats.model;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;

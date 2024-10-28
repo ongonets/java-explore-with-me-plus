@@ -1,11 +1,11 @@
-package ru.practicum.ewm.mapper;
+package ru.practicum.ewm.stats.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.ReportingPolicy;
 import ru.practicum.ewm.dto.HitDto;
-import ru.practicum.ewm.model.Hit;
+import ru.practicum.ewm.stats.model.Hit;
 
 @Mapper(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
         unmappedTargetPolicy = ReportingPolicy.IGNORE,

@@ -11,7 +11,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.util.UriComponentsBuilder;
 import ru.practicum.ewm.dto.HitDto;
 import ru.practicum.ewm.dto.StatDto;
-import ru.practicum.ewm.service.StatsService;
+import ru.practicum.ewm.stats.StatsController;
+import ru.practicum.ewm.stats.service.StatsService;
 
 import java.net.URI;
 import java.util.Arrays;

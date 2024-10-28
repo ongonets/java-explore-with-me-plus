@@ -9,12 +9,12 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import ru.practicum.ewm.dto.HitDto;
 import ru.practicum.ewm.dto.StatDto;
-import ru.practicum.ewm.mapper.HitMapper;
+import ru.practicum.ewm.stats.mapper.HitMapper;
 import ru.practicum.ewm.mapper.HitMapperImpl;
 import ru.practicum.ewm.mapper.StatMapperImpl;
-import ru.practicum.ewm.model.Hit;
-import ru.practicum.ewm.service.StartsServiceImpl;
-import ru.practicum.ewm.service.StatsService;
+import ru.practicum.ewm.stats.model.Hit;
+import ru.practicum.ewm.stats.service.StartsServiceImpl;
+import ru.practicum.ewm.stats.service.StatsService;
 
 import java.util.Arrays;
 import java.util.List;

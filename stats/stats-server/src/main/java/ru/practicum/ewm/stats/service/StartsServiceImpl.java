@@ -1,4 +1,4 @@
-package ru.practicum.ewm.service;
+package ru.practicum.ewm.stats.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -6,11 +6,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.dto.HitDto;
 import ru.practicum.ewm.dto.StatDto;
-import ru.practicum.ewm.mapper.HitMapper;
-import ru.practicum.ewm.mapper.StatMapper;
-import ru.practicum.ewm.model.Hit;
-import ru.practicum.ewm.model.Stat;
-import ru.practicum.ewm.repository.StatsRepository;
+import ru.practicum.ewm.errorHandler.exception.ValidationException;
+import ru.practicum.ewm.stats.mapper.HitMapper;
+import ru.practicum.ewm.stats.mapper.StatMapper;
+import ru.practicum.ewm.stats.model.Hit;
+import ru.practicum.ewm.stats.model.Stat;
+import ru.practicum.ewm.stats.repository.StatsRepository;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -39,9 +40,17 @@ public class StartsServiceImpl implements StatsService {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         LocalDateTime startTime = LocalDateTime.parse(start, formatter);
         LocalDateTime endTime = LocalDateTime.parse(end, formatter);
+        checkDate(startTime,endTime);
         List<Stat> result = repository.getStat(startTime, endTime, uris, unique);
         return result.stream()
                 .map(statMapper::map)
                 .collect(Collectors.toList());
+    }
+
+    private void checkDate(LocalDateTime start, LocalDateTime end) {
+        if (start.isAfter(end)) {
+            log.error("Date not valid: start {} end {}", start, end);
+            throw new ValidationException("Date not valid");
+        }
     }
 }
