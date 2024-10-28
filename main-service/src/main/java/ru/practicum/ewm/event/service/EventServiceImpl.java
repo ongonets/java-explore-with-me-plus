@@ -218,7 +218,7 @@ public class EventServiceImpl implements EventService {
     }
 
     private String createEventUri(Event event) {
-        return String.format("/event/%d", event.getId());
+        return String.format("/events/%d", event.getId());
     }
 
     private void checkEventDate(Event event) {
