@@ -9,6 +9,8 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.comment.dto.CommentDto;
 import ru.practicum.ewm.comment.dto.NewCommentRequest;
+import ru.practicum.ewm.comment.dto.params.CreateCommentParams;
+import ru.practicum.ewm.comment.dto.params.DeleteCommentParams;
 import ru.practicum.ewm.comment.service.CommentService;
 
 @Slf4j
@@ -25,6 +27,17 @@ public class CommentController {
                                     @PathVariable @Positive long userId,
                                     @PathVariable @Positive long eventId) {
         log.info("Received request to add new comment: {}", request.getText());
-        return commentService.createComment(request, userId, eventId);
+        CreateCommentParams params = new CreateCommentParams(request, userId, eventId);
+        return commentService.createComment(params);
+    }
+
+    @DeleteMapping("/events/{eventId}/comment/{commentId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteComment(@PathVariable @Positive long userId,
+                              @PathVariable @Positive long eventId,
+                              @PathVariable @Positive long commentId) {
+        log.info("Received request to delete comment with ID = {}", commentId);
+        DeleteCommentParams params = new DeleteCommentParams(userId, eventId, commentId);
+        commentService.deleteComment(params);
     }
 }
