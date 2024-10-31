@@ -1,4 +1,4 @@
-package ru.practicum.ewm.event.categoryTest;
+package ru.practicum.ewm.event.category;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -8,13 +8,12 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import ru.practicum.ewm.category.AdminCategoryController;
 import ru.practicum.ewm.category.dto.CategoryDto;
 import ru.practicum.ewm.category.dto.NewCategoryDto;
+import ru.practicum.ewm.category.model.Category;
+import ru.practicum.ewm.category.repository.CategoryRepository;
 import ru.practicum.ewm.category.service.CategoryService;
-import ru.practicum.ewm.user.UserController;
-import ru.practicum.ewm.user.dto.NewUserRequest;
-import ru.practicum.ewm.user.dto.UserDto;
-import ru.practicum.ewm.user.service.UserService;
 
 import java.nio.charset.StandardCharsets;
 
@@ -23,10 +22,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(controllers = AdminCategoryControllerTest.class)
+@WebMvcTest(controllers = AdminCategoryController.class)
 public class AdminCategoryControllerTest {
 
     @Autowired
@@ -38,9 +36,18 @@ public class AdminCategoryControllerTest {
     @MockBean
     CategoryService categoryService;
 
+    @MockBean
+    CategoryRepository categoryRepository;
+
     CategoryDto categoryDto = new CategoryDto(1L, "name");
 
     NewCategoryDto request = new NewCategoryDto("name");
+
+    NewCategoryDto patchRequest = new NewCategoryDto("newCat");
+
+    Category category = new Category(1L, "name");
+
+    CategoryDto updatedCategoryDto = new CategoryDto(1L, "newCat");
 
     @Test
     void createCategory() throws Exception {
@@ -66,5 +73,17 @@ public class AdminCategoryControllerTest {
 
         verify(categoryService, Mockito.times(1))
                 .deleteCategory(1);
+    }
+
+    @Test
+    void updateCategory() throws Exception {
+        categoryRepository.save(category);
+        when(categoryService.updateCategory(patchRequest, 1)).thenReturn(updatedCategoryDto);
+        mockMvc.perform(patch("/admin/categories/{catId}", 1L)
+                        .content(mapper.writeValueAsString(patchRequest))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().json(mapper.writeValueAsString(updatedCategoryDto)));
     }
 }

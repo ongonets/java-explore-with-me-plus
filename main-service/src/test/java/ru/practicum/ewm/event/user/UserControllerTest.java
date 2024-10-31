@@ -1,4 +1,4 @@
-package ru.practicum.ewm.event.userTest;
+package ru.practicum.ewm.event.user;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
