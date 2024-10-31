@@ -8,8 +8,7 @@ import lombok.experimental.FieldDefaults;
 @Data
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class DeleteCommentParams {
+public class CommentParams {
     long userId;
-    long eventId;
     long commentId;
 }

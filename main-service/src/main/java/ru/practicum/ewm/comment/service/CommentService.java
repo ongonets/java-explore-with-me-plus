@@ -1,12 +1,19 @@
 package ru.practicum.ewm.comment.service;
 
 import ru.practicum.ewm.comment.dto.CommentDto;
-import ru.practicum.ewm.comment.dto.params.CreateCommentParams;
-import ru.practicum.ewm.comment.dto.params.DeleteCommentParams;
+import ru.practicum.ewm.comment.dto.NewCommentRequest;
+import ru.practicum.ewm.comment.dto.params.CommentParams;
+import ru.practicum.ewm.event.dto.ParamEventDto;
+
+import java.util.List;
 
 public interface CommentService {
 
-    CommentDto createComment(CreateCommentParams params);
+    CommentDto createComment(ParamEventDto params, NewCommentRequest request);
 
-    void deleteComment(DeleteCommentParams params);
+    void deleteComment(CommentParams params);
+
+    List<CommentDto> findEventComment(ParamEventDto paramEventDto);
+
+    List<CommentDto> findUserComments(long userId);
 }

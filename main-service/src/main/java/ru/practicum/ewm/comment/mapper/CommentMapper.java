@@ -9,6 +9,7 @@ import ru.practicum.ewm.event.model.Event;
 import ru.practicum.ewm.user.model.User;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Mapper(componentModel = "spring", imports = {LocalDateTime.class})
 public interface CommentMapper {
@@ -16,6 +17,8 @@ public interface CommentMapper {
     @Mapping(target = "eventId", source = "comment.event.id")
     @Mapping(target = "authorName", source = "comment.author.name")
     CommentDto mapToCommentDto(Comment comment);
+
+    List<CommentDto> mapToCommentDto(List<Comment> comments);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "author", source = "author")

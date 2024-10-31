@@ -9,9 +9,11 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.comment.dto.CommentDto;
 import ru.practicum.ewm.comment.dto.NewCommentRequest;
-import ru.practicum.ewm.comment.dto.params.CreateCommentParams;
-import ru.practicum.ewm.comment.dto.params.DeleteCommentParams;
+import ru.practicum.ewm.comment.dto.params.CommentParams;
 import ru.practicum.ewm.comment.service.CommentService;
+import ru.practicum.ewm.event.dto.ParamEventDto;
+
+import java.util.List;
 
 @Slf4j
 @Validated
@@ -21,23 +23,37 @@ import ru.practicum.ewm.comment.service.CommentService;
 public class CommentController {
     private final CommentService commentService;
 
-    @PostMapping("/events/{eventId}/comment")
+    @PostMapping("/comments")
     @ResponseStatus(HttpStatus.CREATED)
     public CommentDto createComment(@Valid @RequestBody NewCommentRequest request,
                                     @PathVariable @Positive long userId,
-                                    @PathVariable @Positive long eventId) {
+                                    @RequestParam @Positive long eventId) {
         log.info("Received request to add new comment: {}", request.getText());
-        CreateCommentParams params = new CreateCommentParams(request, userId, eventId);
-        return commentService.createComment(params);
+        ParamEventDto params = new ParamEventDto(userId, eventId);
+        return commentService.createComment(params, request);
     }
 
-    @DeleteMapping("/events/{eventId}/comment/{commentId}")
+    @DeleteMapping("/comments/{commentId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteComment(@PathVariable @Positive long userId,
-                              @PathVariable @Positive long eventId,
                               @PathVariable @Positive long commentId) {
         log.info("Received request to delete comment with ID = {}", commentId);
-        DeleteCommentParams params = new DeleteCommentParams(userId, eventId, commentId);
+        CommentParams params = new CommentParams(userId, commentId);
         commentService.deleteComment(params);
     }
+
+    @GetMapping("/comments")
+    public List<CommentDto> findUserComments(@PathVariable @Positive long userId) {
+        log.info("Received request to find user ID = {} comments", userId);
+        return commentService.findUserComments(userId);
+    }
+    @GetMapping("/events/{eventId}/comments")
+    public List<CommentDto> findEventComments(@PathVariable @Positive long userId,
+                                              @PathVariable @Positive long eventId) {
+        log.info("Received request to find event ID = {} comments", eventId);
+        ParamEventDto params = new ParamEventDto(userId, eventId);
+        return commentService.findEventComment(params);
+    }
+
+
 }

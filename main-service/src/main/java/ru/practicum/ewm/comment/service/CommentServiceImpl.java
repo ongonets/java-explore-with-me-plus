@@ -5,17 +5,20 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.comment.dto.CommentDto;
-import ru.practicum.ewm.comment.dto.params.CreateCommentParams;
-import ru.practicum.ewm.comment.dto.params.DeleteCommentParams;
+import ru.practicum.ewm.comment.dto.NewCommentRequest;
+import ru.practicum.ewm.comment.dto.params.CommentParams;
 import ru.practicum.ewm.comment.mapper.CommentMapper;
 import ru.practicum.ewm.comment.model.Comment;
 import ru.practicum.ewm.comment.repository.CommentRepository;
 import ru.practicum.ewm.errorHandler.exception.AccessForbiddenException;
 import ru.practicum.ewm.errorHandler.exception.NotFoundException;
+import ru.practicum.ewm.event.dto.ParamEventDto;
 import ru.practicum.ewm.event.model.Event;
 import ru.practicum.ewm.event.repository.EventRepository;
 import ru.practicum.ewm.user.model.User;
 import ru.practicum.ewm.user.repository.UserRepository;
+
+import java.util.List;
 
 @Slf4j
 @Service
@@ -29,10 +32,10 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     @Transactional
-    public CommentDto createComment(CreateCommentParams params) {
+    public CommentDto createComment(ParamEventDto params, NewCommentRequest request) {
         User author = getUser(params.getUserId());
         Event event = getEvent(params.getEventId());
-        Comment comment = commentMapper.mapToComment(params.getRequest(), author, event);
+        Comment comment = commentMapper.mapToComment(request, author, event);
         comment = commentRepository.save(comment);
         log.info("Comment {} added to event {}", comment.getText(), event.getTitle());
         return commentMapper.mapToCommentDto(comment);
@@ -40,14 +43,27 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     @Transactional
-    public void deleteComment(DeleteCommentParams params) {
+    public void deleteComment(CommentParams params) {
         User author = getUser(params.getUserId());
-        Event event = getEvent(params.getEventId());
         Comment comment = getComment(params.getCommentId());
         validateCommentAuthor(author, comment);
         commentRepository.delete(comment);
-        log.info("Comment {} was deleted from event {} by user {}",
-                comment.getText(), event.getTitle(), author.getName());
+        log.info("Comment {} was deleted  by user {}",
+                comment.getText(), author.getName());
+    }
+
+    @Override
+    public List<CommentDto> findEventComment(ParamEventDto params) {
+        Event event = getUserEvent(params);
+        List<Comment> comments = commentRepository.findAllByEvent(event);
+        return commentMapper.mapToCommentDto(comments);
+    }
+
+    @Override
+    public List<CommentDto> findUserComments(long userId) {
+        User author = getUser(userId);
+        List<Comment> comments = commentRepository.findAllByAuthor(author);
+        return commentMapper.mapToCommentDto(comments);
     }
 
     private void validateCommentAuthor(User author, Comment comment) {
@@ -80,6 +96,19 @@ public class CommentServiceImpl implements CommentService {
                     log.error("Not found event with ID = {}", eventId);
                     return new NotFoundException(String.format("Not found event with ID = %d", eventId));
                 });
+    }
+
+    private Event getUserEvent(ParamEventDto paramEventDto) {
+        long userId = paramEventDto.getUserId();
+        long eventId = paramEventDto.getEventId();
+        User user = getUser(userId);
+        Event event = getEvent(eventId);
+        if (event.getInitiator() != user) {
+            log.error("Event with ID = {} is not found", eventId);
+            throw new NotFoundException(
+                    String.format("Not found event with ID = %d", eventId));
+        }
+        return event;
     }
 
 }
