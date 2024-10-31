@@ -55,5 +55,14 @@ public class CommentController {
         return commentService.findEventComment(params);
     }
 
+    @PatchMapping("/comments/{commentId}")
+    public CommentDto updateComment(@PathVariable @Positive long userId,
+                                    @PathVariable @Positive long commentId,
+                                    @Valid @RequestBody NewCommentRequest request) {
+        log.info("Received request to update comment with ID = {}", commentId);
+        CommentParams params = new CommentParams(userId, commentId);
+        return commentService.updateComment(params, request);
+    }
+
 
 }

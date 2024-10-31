@@ -2,6 +2,7 @@ package ru.practicum.ewm.comment.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 import ru.practicum.ewm.comment.dto.CommentDto;
 import ru.practicum.ewm.comment.dto.NewCommentRequest;
 import ru.practicum.ewm.comment.model.Comment;
@@ -24,5 +25,11 @@ public interface CommentMapper {
     @Mapping(target = "author", source = "author")
     @Mapping(target = "created", expression = "java(LocalDateTime.now())")
     Comment mapToComment(NewCommentRequest request, User author, Event event);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "author", ignore = true)
+    @Mapping(target = "created", ignore = true)
+    @Mapping(target = "event", ignore = true)
+    void update(@MappingTarget Comment comment, NewCommentRequest updateComment);
 
 }

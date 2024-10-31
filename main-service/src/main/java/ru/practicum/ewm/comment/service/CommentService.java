@@ -16,4 +16,6 @@ public interface CommentService {
     List<CommentDto> findEventComment(ParamEventDto paramEventDto);
 
     List<CommentDto> findUserComments(long userId);
+
+    CommentDto updateComment(CommentParams params, NewCommentRequest request);
 }

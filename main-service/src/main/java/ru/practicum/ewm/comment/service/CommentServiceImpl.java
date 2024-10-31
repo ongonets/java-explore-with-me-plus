@@ -11,6 +11,7 @@ import ru.practicum.ewm.comment.mapper.CommentMapper;
 import ru.practicum.ewm.comment.model.Comment;
 import ru.practicum.ewm.comment.repository.CommentRepository;
 import ru.practicum.ewm.errorHandler.exception.AccessForbiddenException;
+import ru.practicum.ewm.errorHandler.exception.ConflictDataException;
 import ru.practicum.ewm.errorHandler.exception.NotFoundException;
 import ru.practicum.ewm.event.dto.ParamEventDto;
 import ru.practicum.ewm.event.model.Event;
@@ -18,6 +19,7 @@ import ru.practicum.ewm.event.repository.EventRepository;
 import ru.practicum.ewm.user.model.User;
 import ru.practicum.ewm.user.repository.UserRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
@@ -66,10 +68,31 @@ public class CommentServiceImpl implements CommentService {
         return commentMapper.mapToCommentDto(comments);
     }
 
+    @Override
+    public CommentDto updateComment(CommentParams params, NewCommentRequest request) {
+        User author = getUser(params.getUserId());
+        Comment comment = getComment(params.getCommentId());
+        validateCommentAuthor(author, comment);
+        validateCommentDate(comment);
+        commentMapper.update(comment, request);
+        commentRepository.save(comment);
+        log.info("Comment ID = {} updated", comment.getId());
+        return commentMapper.mapToCommentDto(comment);
+    }
+
     private void validateCommentAuthor(User author, Comment comment) {
         if (!author.getId().equals(comment.getAuthor().getId())) {
             log.error("User with ID = {} has no rights to delete comment ID = {}", author.getId(), comment.getId());
             throw new AccessForbiddenException("No rights to delete comment");
+        }
+
+    }
+
+    private void validateCommentDate(Comment comment) {
+        if (comment.getCreated().plusHours(1).isBefore(LocalDateTime.now())) {
+            log.error("Comment ID = {} is not available for change now", comment.getId());
+            throw new ConflictDataException(
+                    String.format("Comment ID = %d is not available for change now", comment.getId()));
         }
 
     }
