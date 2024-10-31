@@ -62,14 +62,6 @@ public class ErrorHandler {
                 "Integrity constraint has been violated.", HttpStatus.CONFLICT);
     }
 
-    /*@ExceptionHandler
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ApiError handleThrowable(RuntimeException e) {
-        log.error(e.getStackTrace().toString());
-        return new ApiError(getStackTrace(e), e.getMessage(),
-                "Error", HttpStatus.INTERNAL_SERVER_ERROR);
-    }*/
-
     private String getStackTrace(Throwable e) {
         StringWriter stringWriter = new StringWriter();
         PrintWriter printWriter = new PrintWriter(stringWriter);

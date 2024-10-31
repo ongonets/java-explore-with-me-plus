@@ -1,4 +1,4 @@
-package ru.practicum.ewm;
+package ru.practicum.ewm.stats;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -6,7 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.dto.HitDto;
 import ru.practicum.ewm.dto.StatDto;
-import ru.practicum.ewm.service.StatsService;
+import ru.practicum.ewm.stats.service.StatsService;
 
 import java.util.List;
 

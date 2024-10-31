@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface StatClient {
 
-    public void hit(HitDto hitDto);
+    void hit(HitDto hitDto);
 
-    public List<StatDto> stat(ParamDto paramDto);
+    List<StatDto> stat(ParamDto paramDto);
 }

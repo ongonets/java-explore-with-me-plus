@@ -1,10 +1,8 @@
 package ru.practicum.ewm.compilation.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.validation.constraints.Size;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.util.List;
@@ -14,12 +12,9 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class NewCompilationDto {
-
     List<Long> events;
-
-    Boolean pinned;
-
-    @NotBlank
+    boolean pinned;
+    @NotBlank @Size(min = 1, max = 50)
     String title;
 
 }

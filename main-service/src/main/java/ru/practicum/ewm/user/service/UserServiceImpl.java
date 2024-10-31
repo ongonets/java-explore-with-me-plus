@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.ewm.errorHandler.exception.ConflictDataException;
 import ru.practicum.ewm.errorHandler.exception.NotFoundException;
 import ru.practicum.ewm.user.dto.FindUsersParams;
 import ru.practicum.ewm.user.dto.NewUserRequest;
@@ -25,6 +26,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDto createUser(NewUserRequest request) {
         User user = userMapper.mapToUser(request);
+        isEmailUnique(user.getEmail());
         user = userRepository.save(user);
         log.info("User is saved: {}", user);
         return userMapper.mapToUserDto(user);
@@ -50,5 +52,12 @@ public class UserServiceImpl implements UserService {
                     return new NotFoundException("Not found user with ID = " + id);
                 });
         userRepository.delete(userToDelete);
+    }
+
+    private void isEmailUnique(String email) {
+        if (userRepository.existsByEmail(email)) {
+            log.error("Email {} is already registered", email);
+            throw new ConflictDataException("This email is already registered");
+        }
     }
 }
