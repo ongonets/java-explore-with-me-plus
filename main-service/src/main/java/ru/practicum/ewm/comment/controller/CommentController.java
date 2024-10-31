@@ -47,6 +47,7 @@ public class CommentController {
         log.info("Received request to find user ID = {} comments", userId);
         return commentService.findUserComments(userId);
     }
+
     @GetMapping("/events/{eventId}/comments")
     public List<CommentDto> findEventComments(@PathVariable @Positive long userId,
                                               @PathVariable @Positive long eventId) {
