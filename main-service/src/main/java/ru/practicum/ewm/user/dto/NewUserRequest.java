@@ -3,6 +3,7 @@ package ru.practicum.ewm.user.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 import org.springframework.validation.annotation.Validated;
@@ -10,6 +11,7 @@ import org.springframework.validation.annotation.Validated;
 @Data
 @Validated
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@AllArgsConstructor
 public class NewUserRequest {
 
     @NotBlank
