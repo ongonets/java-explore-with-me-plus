@@ -54,7 +54,7 @@ public class ErrorHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.FORBIDDEN)
-    public ApiError handleConditionsNotMetException(AccessForbiddenException e) {
+    public ApiError handleAccessForbiddenException(AccessForbiddenException e) {
         return new ApiError(getStackTrace(e), e.getMessage(),
                 "No rights for requested operation", HttpStatus.FORBIDDEN);
     }
