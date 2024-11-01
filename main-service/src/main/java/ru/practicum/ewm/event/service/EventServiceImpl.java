@@ -130,14 +130,6 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public EventFullDto findPublicEventById(long id) {
-        Event event = getEvent(id);
-        Map<Long, Long> countConfirmedRequest = getCountConfirmedRequest(List.of(event));
-        Map<Long, Long> stat = getStat(List.of(event));
-        return eventMapper.mapToFullDto(event, stat.get(event.getId()), countConfirmedRequest.get(event.getId()));
-    }
-
-    @Override
     @Transactional
     public EventFullDto update(long eventId, UpdateEventUserRequest updateEvent) {
         Event event = getEvent(eventId);
