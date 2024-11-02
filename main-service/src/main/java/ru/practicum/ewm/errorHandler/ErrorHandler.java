@@ -7,10 +7,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import ru.practicum.ewm.errorHandler.exception.ConditionsNotMetException;
-import ru.practicum.ewm.errorHandler.exception.ConflictDataException;
-import ru.practicum.ewm.errorHandler.exception.NotFoundException;
-import ru.practicum.ewm.errorHandler.exception.ValidationException;
+import ru.practicum.ewm.errorHandler.exception.*;
 import ru.practicum.ewm.errorHandler.model.ApiError;
 
 import java.io.PrintWriter;
@@ -53,6 +50,13 @@ public class ErrorHandler {
     public ApiError handleConditionsNotMetException(ConditionsNotMetException e) {
         return new ApiError(getStackTrace(e), e.getMessage(),
                 "For the requested operation the conditions are not met.", HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ApiError handleAccessForbiddenException(AccessForbiddenException e) {
+        return new ApiError(getStackTrace(e), e.getMessage(),
+                "No rights for requested operation", HttpStatus.FORBIDDEN);
     }
 
     @ExceptionHandler
